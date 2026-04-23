@@ -1,0 +1,13 @@
+﻿# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Publish folder
+publish/
+
+# Secrets
+appsettings.Development.json
+appsettings.Local.json

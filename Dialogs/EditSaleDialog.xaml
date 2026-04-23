@@ -1,0 +1,171 @@
+<Window x:Class="ConstruxERP.Dialogs.EditSaleDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Satis Duzenle"
+        Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White"
+        FontFamily="{StaticResource AppFont}">
+
+    <StackPanel>
+
+        <!-- Header -->
+        <Border Background="#0F172A" Padding="24,18">
+            <Grid>
+                <StackPanel>
+                    <TextBlock Text="Satis Islemini Duzenle"
+                               FontSize="17" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock x:Name="TxtSubtitle" Text=""
+                               FontSize="12" Foreground="#64748B" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="#1E293B" CornerRadius="6" Padding="10,5">
+                    <TextBlock x:Name="TxtDate" Text=""
+                               FontSize="12" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Bilgi -->
+        <Border Background="#F8FAFC" BorderBrush="#E2E8F0"
+                BorderThickness="0,0,0,1" Padding="24,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="MUSTERI" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtCustomer" Text="—"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="#0F172A" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="URUN" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtProduct" Text="—"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="#0F172A" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="ADET x BIRIM FIYAT" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtQtyPrice" Text="—"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="#0F172A" Margin="0,3,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Ozet -->
+        <Grid Margin="24,16,24,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#EFF6FF" CornerRadius="8" Padding="14,10">
+                <StackPanel>
+                    <TextBlock Text="TOPLAM TUTAR" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#1D4ED8"/>
+                    <TextBlock x:Name="TxtTotal" Text="₺0.00"
+                               FontSize="18" FontWeight="Bold"
+                               Foreground="#1D4ED8" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Background="#F0FDF4" CornerRadius="8" Padding="14,10">
+                <StackPanel>
+                    <TextBlock Text="ODENEN TUTAR" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#059669"/>
+                    <TextBlock x:Name="TxtPaidDisplay" Text="₺0.00"
+                               FontSize="18" FontWeight="Bold"
+                               Foreground="#059669" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="4" Background="#FEF2F2" CornerRadius="8" Padding="14,10">
+                <StackPanel>
+                    <TextBlock Text="KALAN BORC" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#991B1B"/>
+                    <TextBlock x:Name="TxtDebtDisplay" Text="₺0.00"
+                               FontSize="18" FontWeight="Bold"
+                               Foreground="#DC2626" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Background="#F1F5F9" Height="1" Margin="24,18,24,0"/>
+
+        <TextBlock Text="ODEME GUNCELLE" FontSize="10" FontWeight="SemiBold"
+                   Foreground="#64748B" Margin="24,14,0,0"/>
+
+        <StackPanel Margin="24,10,24,0">
+
+            <TextBlock Text="Yeni Odenen Tutar (₺)" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+
+            <TextBox x:Name="TxtNewPaid" Style="{StaticResource FormTextBox}"
+                     Margin="0,0,0,14" TextChanged="TxtNewPaid_TextChanged"/>
+
+            <Border Background="#FEF2F2" CornerRadius="6" Padding="14,10" Margin="0,0,0,14">
+                <Grid>
+                    <TextBlock Text="Yeni Kalan Borc (onizleme)"
+                               FontSize="12" FontWeight="SemiBold" Foreground="#991B1B"/>
+                    <TextBlock x:Name="TxtNewDebtPreview" Text="₺0.00"
+                               HorizontalAlignment="Right"
+                               FontSize="15" FontWeight="Bold" Foreground="#DC2626"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="Odeme Turu" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+
+            <ComboBox x:Name="CmbPaymentType" Style="{StaticResource ModernComboBox}"
+                      Margin="0,0,0,6" SelectedIndex="0">
+                <ComboBoxItem Content="Nakit"/>
+                <ComboBoxItem Content="Kredi"/>
+                <ComboBoxItem Content="Kismi"/>
+            </ComboBox>
+
+            <TextBlock x:Name="TxtError" Foreground="#DC2626" FontSize="12"
+                       Margin="0,4,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0"
+                Padding="24,16" Margin="0,18,0,0">
+            <Grid>
+                <Button Content="Satisi Sil"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource SecondaryButton}"
+                        Height="38" Padding="16,0"
+                        Foreground="#DC2626"
+                        Click="BtnDelete_Click"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Iptal"
+                            Style="{StaticResource SecondaryButton}"
+                            IsCancel="True"
+                            Height="38" Padding="18,0"/>
+
+                    <Button Content="✓ Kaydet"
+                            Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="18,0"
+                            Margin="10,0,0,0"
+                            Click="BtnSave_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </StackPanel>
+</Window>

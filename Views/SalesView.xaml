@@ -1,0 +1,207 @@
+<UserControl x:Class="ConstruxERP.Views.SalesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource ContentBg}"
+             Loaded="UserControl_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- KPI strip -->
+            <RowDefinition Height="*"/>
+            <!-- Table -->
+            <RowDefinition Height="Auto"/>
+            <!-- Pagination -->
+        </Grid.RowDefinitions>
+
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Background="White"
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="28,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Satış İşlemleri" Style="{StaticResource PageTitle}" FontSize="20"/>
+                        <Border Background="#DBEAFE" CornerRadius="4" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Canlı Görünüm" FontSize="11" FontWeight="SemiBold" Foreground="#1D4ED8"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Malzeme satışlarını yönet ve takip et"
+                               FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" x:Name="TxtSearch" Style="{StaticResource SearchBox}"
+                         TextChanged="TxtSearch_TextChanged"/>
+                <Button Grid.Column="3" Content="+ Yeni Satış Ekle"
+                        Style="{StaticResource PrimaryButton}"
+                        Click="BtnAddSale_Click" Height="36" Padding="14,0"/>
+            </Grid>
+        </Border>
+
+        <!-- KPI Strip -->
+        <Border Grid.Row="1" Background="White"
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="28,0">
+            <Grid Height="76">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="GÜNLÜK TOPLAM" Style="{StaticResource SectionLabel}" Margin="0"/>
+                    <TextBlock x:Name="TxtDailyTotal" Text="₺0,00"
+                               FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Rectangle Grid.Column="1" Fill="#E2E8F0"/>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="BUGÜN ÖDENEN" Style="{StaticResource SectionLabel}" Margin="0"/>
+                    <TextBlock x:Name="TxtPaidToday" Text="₺0,00"
+                               FontSize="22" FontWeight="Bold" Foreground="{StaticResource Green}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Rectangle Grid.Column="3" Fill="#E2E8F0"/>
+
+                <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="BEKLEYEN BORÇ" Style="{StaticResource SectionLabel}" Margin="0"/>
+                    <TextBlock x:Name="TxtPendingDebt" Text="₺0,00"
+                               FontSize="22" FontWeight="Bold" Foreground="{StaticResource Red}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Rectangle Grid.Column="5" Fill="#E2E8F0"/>
+
+                <StackPanel Grid.Column="6" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="İŞLEMLER" Style="{StaticResource SectionLabel}" Margin="0"/>
+                    <TextBlock x:Name="TxtTxCount" Text="0"
+                               FontSize="22" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Table -->
+        <Border Grid.Row="2" Background="White">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Column Headers -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                        <Grid Margin="28,0" Height="38">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="96"/>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="105"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="TARİH"          Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="1" Text="MÜŞTERİ"        Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="2" Text="ÜRÜN"           Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="3" Text="ADET"           Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="4" Text="BİRİM FİYAT"    Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="5" Text="TOPLAM"         Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="6" Text="ÖDENEN"         Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="7" Text="BORÇ"           Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                            <TextBlock Grid.Column="8" Text="DÜZENLE"        Style="{StaticResource SectionLabel}" VerticalAlignment="Center" Margin="0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Data rows -->
+                    <ItemsControl x:Name="SalesList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border Background="{Binding RowBg}">
+                                        <Grid Margin="28,0" Height="56">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="96"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="105"/>
+                                                <ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding DateShort}"
+                                                       FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CustomerName}"
+                                                       FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding ProductName}"
+                                                       FontSize="12" Foreground="#374151"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding QtyDisplay}"
+                                                       FontSize="12" Foreground="#374151" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding UnitPriceDisplay}"
+                                                       FontSize="12" Foreground="#374151" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding TotalDisplay}"
+                                                       FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding PaidDisplay}"
+                                                       FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Green}" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="7" Background="{Binding DebtBg}"
+                                                    CornerRadius="4" Padding="6,2"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding DebtDisplay}"
+                                                           FontSize="13" FontWeight="Bold"
+                                                           Foreground="{Binding DebtFg}"/>
+                                            </Border>
+                                            <Button Grid.Column="8" Content="Edit"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    Height="28" Padding="10,0"
+                                                    VerticalAlignment="Center"
+                                                    Tag="{Binding Id}"
+                                                    Click="BtnEditSale_Click"/>
+                                        </Grid>
+                                    </Border>
+                                    <Rectangle Height="1" Fill="#F1F5F9" Margin="28,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Empty state -->
+                    <TextBlock x:Name="TxtEmpty"
+                               Text="Satış kaydı bulunamadı. Başlamak için '+ Yeni Satış Ekle' butonuna tıklayın."
+                               FontSize="14" Foreground="{StaticResource TextMuted}"
+                               HorizontalAlignment="Center" Margin="0,48"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Pagination -->
+        <Border Grid.Row="3" Background="White"
+                BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="28,12">
+            <Grid>
+                <TextBlock x:Name="TxtPagingInfo"
+                           FontSize="13" Foreground="{StaticResource TextSecondary}"
+                           VerticalAlignment="Center"/>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Content="← Önceki" Style="{StaticResource SecondaryButton}"
+                            Height="32" Padding="12,0" Click="BtnPrev_Click"
+                            x:Name="BtnPrev" IsEnabled="False"/>
+                    <TextBlock x:Name="TxtPageNum"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBlue}"
+                               VerticalAlignment="Center" Margin="12,0"/>
+                    <Button Content="Sonraki →" Style="{StaticResource SecondaryButton}"
+                            Height="32" Padding="12,0" Click="BtnNext_Click"
+                            x:Name="BtnNext"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

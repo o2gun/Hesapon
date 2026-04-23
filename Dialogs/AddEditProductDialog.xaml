@@ -1,0 +1,134 @@
+<Window x:Class="ConstruxERP.Dialogs.AddEditProductDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Product"
+        Width="500" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White"
+        FontFamily="{StaticResource AppFont}">
+
+    <StackPanel>
+        <Border Background="#0F172A" Padding="24,18">
+            <TextBlock x:Name="TxtTitle" Text="Ürün Ekle"
+                       FontSize="17" FontWeight="Bold" Foreground="White"/>
+        </Border>
+
+        <StackPanel Margin="24,18,24,0">
+
+            <TextBlock Text="Ürünü İsmi *" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtName" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>
+
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Kategori" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtCategory" Style="{StaticResource FormTextBox}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Birim *" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="CmbUnit" Style="{StaticResource ModernComboBox}" IsEditable="True">
+                        <ComboBoxItem Content="parça"/>
+                        <ComboBoxItem Content="kg"/>
+                        <ComboBoxItem Content="ton"/>
+                        <ComboBoxItem Content="paket"/>
+                        <ComboBoxItem Content="sack"/>
+                        <ComboBoxItem Content="sheet"/>
+                        <ComboBoxItem Content="length"/>
+                        <ComboBoxItem Content="roll"/>
+                        <ComboBoxItem Content="gallon"/>
+                        <ComboBoxItem Content="meter"/>
+                        <ComboBoxItem Content="pallet"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Satın alma fiyatı (₺)" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtPurchasePrice" Style="{StaticResource FormTextBox}" Text="0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Satış fiyatı (₺) *" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtSalePrice" Style="{StaticResource FormTextBox}" Text="0"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Mevcut Stok" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtStock" Style="{StaticResource FormTextBox}" Text="0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Minimum Stok" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtMinStock" Style="{StaticResource FormTextBox}" Text="0"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="Aldığımız Şirket" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtSupplier" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>
+
+            <TextBlock Text="SKU / Kodu" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtSku" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>
+
+            <TextBlock Text="Not" FontSize="12" FontWeight="SemiBold"
+                       Foreground="#374151" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtNotes" Height="60" Padding="10,8"
+                     FontSize="13" BorderBrush="#D1D5DB" BorderThickness="1"
+                     TextWrapping="Wrap" AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,6">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TextBox">
+                                    <Border Background="White" BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                        <ScrollViewer x:Name="PART_ContentHost" Margin="10,8"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+
+            <TextBlock x:Name="TxtError" Foreground="#DC2626" FontSize="12"
+                       Margin="0,0,0,8" Visibility="Collapsed" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,16" Margin="0,18,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="İptal" Style="{StaticResource SecondaryButton}"
+                        IsCancel="True" Height="38" Padding="18,0"/>
+                <Button Content="✓ Ürün Kayıt" Style="{StaticResource PrimaryButton}"
+                        Height="38" Padding="18,0" Margin="10,0,0,0"
+                        Click="BtnSave_Click"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Window>
