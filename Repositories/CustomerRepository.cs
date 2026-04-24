@@ -1,5 +1,6 @@
 using ConstruxERP.Models;
 using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
 
 namespace ConstruxERP.Repositories
@@ -8,16 +9,29 @@ namespace ConstruxERP.Repositories
     {
         // ─── Read ─────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Returns all customers with aggregated TotalPurchases and TotalPaid
-        /// calculated in a single LEFT JOIN query — no N+1 problem.
-        /// </summary>
-        public List<Customer> GetAll(string search = "")
+        public List<Customer> GetAll(string search = "", bool searchName = true, bool searchPhone = true, bool searchAddress = true, decimal minDebt = 0, int page = 1, int pageSize = 100)
         {
             var list = new List<Customer>();
+            int offset = (page - 1) * pageSize;
             using var conn = DatabaseContext.GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+
+            string searchCondition = "";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var conditions = new List<string>();
+                if (searchName) conditions.Add("c.name LIKE @s");
+                if (searchPhone) conditions.Add("c.phone LIKE @s");
+                if (searchAddress) conditions.Add("c.address LIKE @s");
+
+                if (conditions.Count > 0)
+                {
+                    searchCondition = "AND (" + string.Join(" OR ", conditions) + ")";
+                    cmd.Parameters.AddWithValue("@s", $"%{search}%");
+                }
+            }
+
+            cmd.CommandText = $@"
                 SELECT c.id, c.name, c.phone, c.email,
                        c.address, c.billing_address,
                        c.total_debt, c.created_at,
@@ -25,17 +39,50 @@ namespace ConstruxERP.Repositories
                        COALESCE(SUM(s.amount_paid),  0) AS total_paid
                 FROM customers c
                 LEFT JOIN sales s ON s.customer_id = c.id
-                WHERE (@s = '' OR c.name LIKE @s OR c.phone LIKE @s)
+                WHERE c.total_debt >= @minDebt {searchCondition}
                 GROUP BY c.id
-                ORDER BY c.name";
-            cmd.Parameters.AddWithValue("@s",
-                string.IsNullOrWhiteSpace(search) ? "" : $"%{search}%");
+                ORDER BY c.name
+                LIMIT @limit OFFSET @offset";
+
+            cmd.Parameters.AddWithValue("@minDebt", minDebt);
+            cmd.Parameters.AddWithValue("@limit", pageSize);
+            cmd.Parameters.AddWithValue("@offset", offset);
+
             using var r = cmd.ExecuteReader();
             while (r.Read()) list.Add(MapFull(r));
             return list;
         }
 
-        /// <summary>Customers with outstanding debt, including aggregated totals.</summary>
+        public int CountAll(string search = "", bool searchName = true, bool searchPhone = true, bool searchAddress = true, decimal minDebt = 0)
+        {
+            using var conn = DatabaseContext.GetConnection();
+            using var cmd = conn.CreateCommand();
+
+            string searchCondition = "";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var conditions = new List<string>();
+                if (searchName) conditions.Add("c.name LIKE @s");
+                if (searchPhone) conditions.Add("c.phone LIKE @s");
+                if (searchAddress) conditions.Add("c.address LIKE @s");
+
+                if (conditions.Count > 0)
+                {
+                    searchCondition = "AND (" + string.Join(" OR ", conditions) + ")";
+                    cmd.Parameters.AddWithValue("@s", $"%{search}%");
+                }
+            }
+
+            cmd.CommandText = $@"
+                SELECT COUNT(*)
+                FROM customers c
+                WHERE c.total_debt >= @minDebt {searchCondition}";
+
+            cmd.Parameters.AddWithValue("@minDebt", minDebt);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
         public List<Customer> GetWithDebt()
         {
             var list = new List<Customer>();
@@ -57,7 +104,6 @@ namespace ConstruxERP.Repositories
             return list;
         }
 
-        /// <summary>Single customer by id (no aggregation needed here).</summary>
         public Customer? GetById(int id)
         {
             using var conn = DatabaseContext.GetConnection();
@@ -158,7 +204,7 @@ namespace ConstruxERP.Repositories
                 VALUES (@name, @phone, @email, @address, @billing);
                 SELECT last_insert_rowid();";
             BindParams(cmd, c);
-            return (int)(long)cmd.ExecuteScalar()!;
+            return Convert.ToInt32(cmd.ExecuteScalar()); // BUG FIXED HERE
         }
 
         public void Update(Customer c)
@@ -175,8 +221,7 @@ namespace ConstruxERP.Repositories
             cmd.ExecuteNonQuery();
         }
 
-        public void AdjustDebt(int customerId, decimal delta,
-            SqliteConnection? conn = null)
+        public void AdjustDebt(int customerId, decimal delta, SqliteConnection? conn = null)
         {
             bool owned = conn == null;
             conn ??= DatabaseContext.GetConnection();
@@ -205,7 +250,6 @@ namespace ConstruxERP.Repositories
 
         // ─── Helpers ──────────────────────────────────────────────────────────
 
-        /// <summary>Maps a reader that includes the two aggregated columns at indices 8 and 9.</summary>
         private static Customer MapFull(SqliteDataReader r) => new()
         {
             Id = r.GetInt32(0),

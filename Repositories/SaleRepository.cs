@@ -86,7 +86,7 @@ namespace ConstruxERP.Repositories
                 WHERE (@s = '' OR c.name LIKE @s OR p.name LIKE @s)";
             cmd.Parameters.AddWithValue("@s",
                 string.IsNullOrWhiteSpace(search) ? "" : $"%{search}%");
-            return (int)(long)cmd.ExecuteScalar()!;
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
         // ─── Write ────────────────────────────────────────────────────────────
@@ -102,9 +102,9 @@ namespace ConstruxERP.Repositories
                 cmd.CommandText = @"
                     INSERT INTO sales
                         (customer_id, product_id, qty, unit_price, total_price,
-                         amount_paid, remaining_debt, payment_type, note)
+                         amount_paid, remaining_debt, payment_type, note, sale_date)
                     VALUES
-                        (@cid, @pid, @qty, @up, @tp, @ap, @rd, @pt, @note);
+                        (@cid, @pid, @qty, @up, @tp, @ap, @rd, @pt, @note, @sdate);
                     SELECT last_insert_rowid();";
                 cmd.Parameters.AddWithValue("@cid", sale.CustomerId);
                 cmd.Parameters.AddWithValue("@pid", sale.ProductId);
@@ -115,7 +115,10 @@ namespace ConstruxERP.Repositories
                 cmd.Parameters.AddWithValue("@rd", sale.RemainingDebt);
                 cmd.Parameters.AddWithValue("@pt", sale.PaymentType);
                 cmd.Parameters.AddWithValue("@note", sale.Note ?? "");
-                int saleId = (int)(long)cmd.ExecuteScalar()!;
+
+                string sDate = string.IsNullOrWhiteSpace(sale.SaleDate) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : sale.SaleDate;
+                cmd.Parameters.AddWithValue("@sdate", sDate);
+                int saleId = Convert.ToInt32(cmd.ExecuteScalar());
 
                 // Stok düş
                 using var cmdStock = conn.CreateCommand();
@@ -317,7 +320,7 @@ namespace ConstruxERP.Repositories
             cmd.CommandText = @"
                 SELECT COUNT(*) FROM sales
                 WHERE date(sale_date) = date('now','localtime')";
-            return (int)(long)cmd.ExecuteScalar()!;
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
         // ─── Helpers ─────────────────────────────────────────────────────────

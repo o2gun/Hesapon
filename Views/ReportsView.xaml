@@ -4,185 +4,128 @@
              Background="{StaticResource ContentBg}"
              Loaded="UserControl_Loaded">
 
-    <Grid>
+    <Grid Margin="28">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header Bar -->
-        <Border Grid.Row="0" Background="White"
-                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="28,16">
+        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,24" BorderBrush="#E2E8F0" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="Raporlar &amp; Analiz" Style="{StaticResource PageTitle}" FontSize="20"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="Ana Sayfa" FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{StaticResource AccentBlue}"/>
-                        <TextBlock Text=" / Satış Performansı" FontSize="12"
-                                   Foreground="{StaticResource TextSecondary}"/>
-                    </StackPanel>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Finansal Raporlar" Style="{StaticResource PageTitle}" FontSize="22"/>
+                    <TextBlock Text="İşletmenizin nakit akışı ve satış analizleri" FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0"/>
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource SecondaryButton}"
-                        Height="36" Padding="14,0" Click="BtnExportExcel_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📗 " FontSize="13" VerticalAlignment="Center"/>
-                        <TextBlock Text="Excel Olarak Dışa Aktar" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Grid.Column="3" Style="{StaticResource SecondaryButton}"
-                        Height="36" Padding="14,0" Click="BtnExportCsv_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📥 " FontSize="13" VerticalAlignment="Center"/>
-                        <TextBlock Text="CSV Olarak Dışa Aktar" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="Dönem:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,10,0"/>
+
+                    <Button Content="Bugün" Tag="Today" Style="{StaticResource SecondaryButton}" Height="34" Margin="0,0,5,5" Click="BtnQuickFilter_Click"/>
+                    <Button Content="Bu Ay" Tag="ThisMonth" Style="{StaticResource SecondaryButton}" Height="34" Margin="0,0,5,5" Click="BtnQuickFilter_Click"/>
+                    <Button Content="3 Ay" Tag="3Months" Style="{StaticResource SecondaryButton}" Height="34" Margin="0,0,5,5" Click="BtnQuickFilter_Click"/>
+                    <Button Content="12 Ay" Tag="12Months" Style="{StaticResource SecondaryButton}" Height="34" Margin="0,0,15,5" Click="BtnQuickFilter_Click"/>
+
+                    <DatePicker x:Name="DpStart" Width="115" SelectedDateChanged="DpDate_SelectedDateChanged" Margin="0,0,5,5"/>
+                    <TextBlock Text=" - " VerticalAlignment="Center" Margin="0,0,5,5"/>
+                    <DatePicker x:Name="DpEnd" Width="115" SelectedDateChanged="DpDate_SelectedDateChanged" Margin="0,0,0,5"/>
+                </WrapPanel>
             </Grid>
         </Border>
 
-        <!-- Main Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="28,20,28,28">
+        <Grid Grid.Row="1" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- Filter Controls -->
-                <Border Style="{StaticResource Card}" Padding="20,14" Margin="0,0,0,20">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="DÖNEM:" FontSize="11" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox x:Name="CmbPeriod" Style="{StaticResource ModernComboBox}"
-                                  Width="180" SelectedIndex="0"
-                                  SelectionChanged="CmbPeriod_SelectionChanged">
-                            <ComboBoxItem Content="Bugün"/>
-                            <ComboBoxItem Content="Bu Ay"/>
-                            <ComboBoxItem Content="Son 3 Ay"/>
-                            <ComboBoxItem Content="Son 12 Ay"/>
-                        </ComboBox>
-                    </StackPanel>
-                </Border>
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="TAHSİLAT (GİREN NAKİT)" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtTotalCollections" Text="₺0,00" FontSize="22" FontWeight="Bold" Foreground="#10B981" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
 
-                <!-- KPI Row -->
-                <UniformGrid Columns="4" Margin="0,0,0,20">
-                    <Border Background="#2563EB" CornerRadius="10" Padding="20,16" Margin="0,0,8,0">
-                        <StackPanel>
-                            <TextBlock Text="TOPLAM GELİR" FontSize="10.5" FontWeight="SemiBold" Foreground="#BFDBFE"/>
-                            <TextBlock x:Name="TxtRevenue" Text="₺0,00"
-                                       FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,6,0,0"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#0F172A" CornerRadius="10" Padding="20,16" Margin="4,0,4,0">
-                        <StackPanel>
-                            <TextBlock Text="TOPLAM ÖDENEN" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B"/>
-                            <TextBlock x:Name="TxtPaid" Text="₺0,00"
-                                       FontSize="24" FontWeight="Bold" Foreground="#10B981" Margin="0,6,0,0"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#7C3AED" CornerRadius="10" Padding="20,16" Margin="4,0,4,0">
-                        <StackPanel>
-                            <TextBlock Text="KALAN BORÇ" FontSize="10.5" FontWeight="SemiBold" Foreground="#DDD6FE"/>
-                            <TextBlock x:Name="TxtDebt" Text="₺0,00"
-                                       FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,6,0,0"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#0F766E" CornerRadius="10" Padding="20,16" Margin="8,0,0,0">
-                        <StackPanel>
-                            <TextBlock Text="İŞLEMLER" FontSize="10.5" FontWeight="SemiBold" Foreground="#99F6E4"/>
-                            <TextBlock x:Name="TxtTxCount" Text="0"
-                                       FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,6,0,0"/>
-                        </StackPanel>
-                    </Border>
-                </UniformGrid>
+            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="ÖDEMELER (ÇIKAN NAKİT)" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtTotalPayments" Text="₺0,00" FontSize="22" FontWeight="Bold" Foreground="#EF4444" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
 
-                <!-- Top Products + Monthly Breakdown side by side -->
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+            <Border Grid.Column="4" Background="#F8FAFC" CornerRadius="12" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="NET NAKİT AKIŞI" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtNetCashFlow" Text="₺0,00" FontSize="22" FontWeight="Bold" Foreground="#0F172A" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
 
-                    <!-- Top 5 Products -->
-                    <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0">
-                        <StackPanel>
-                            <Border Padding="20,14" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
-                                <TextBlock Text="En Çok Satan Ürünler"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimary}"/>
-                            </Border>
-                            <ItemsControl x:Name="TopProductsList" Margin="20,12,20,16">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="0,0,0,12">
-                                            <Grid>
-                                                <TextBlock Text="{Binding Product}"
-                                                           FontSize="12" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                                <TextBlock Text="{Binding Revenue}"
-                                                           HorizontalAlignment="Right"
-                                                           FontSize="12" FontWeight="Bold"
-                                                           Foreground="{StaticResource AccentBlue}"/>
-                                            </Grid>
-                                            <Grid Height="8" Margin="0,5,0,0">
-                                                <Border CornerRadius="4" Background="#DBEAFE"/>
-                                                <Border CornerRadius="4" Background="#2563EB"
-                                                        HorizontalAlignment="Left"
-                                                        Width="{Binding BarWidth}"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock x:Name="TxtNoProducts"
-                                       Text="Bu dönem için satış verisi yok."
-                                       FontSize="13" Foreground="{StaticResource TextMuted}"
-                                       Margin="20,0,20,16" Visibility="Collapsed"/>
-                        </StackPanel>
-                    </Border>
+            <Border Grid.Column="6" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="TOPLAM SATIŞ HACMİ" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock x:Name="TxtTotalSales" Text="₺0,00" FontSize="22" FontWeight="Bold" Foreground="#3B82F6" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-                    <!-- Revenue by Category -->
-                    <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
-                        <StackPanel>
-                            <Border Padding="20,14" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
-                                <TextBlock Text="Kategoriye Göre Gelir"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimary}"/>
-                            </Border>
-                            <ItemsControl x:Name="CategoryList" Margin="20,12,20,16">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="0,0,0,12">
-                                            <Grid>
-                                                <TextBlock Text="{Binding Category}"
-                                                           FontSize="12" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                                <TextBlock Text="{Binding Revenue}"
-                                                           HorizontalAlignment="Right"
-                                                           FontSize="12" FontWeight="Bold"
-                                                           Foreground="{StaticResource AccentBlue}"/>
-                                            </Grid>
-                                            <Grid Height="8" Margin="0,5,0,0">
-                                                <Border CornerRadius="4" Background="#F1F5F9"/>
-                                                <Border CornerRadius="4" Background="{Binding BarColor}"
-                                                        HorizontalAlignment="Left"
-                                                        Width="{Binding BarWidth}"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock x:Name="TxtNoCat"
-                                       Text="Bu dönem için kategori verisi yok."
-                                       FontSize="13" Foreground="{StaticResource TextMuted}"
-                                       Margin="20,0,20,16" Visibility="Collapsed"/>
-                        </StackPanel>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Padding="20,16" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Background="#F8FAFC" CornerRadius="12,12,0,0">
+                        <TextBlock Text="🏆 En Çok Satan Ürünler (Seçili Dönem)" FontSize="15" FontWeight="SemiBold" Foreground="#0F172A"/>
                     </Border>
+                    <ScrollViewer Grid.Row="1" Margin="20">
+                        <ItemsControl x:Name="ListTopProducts">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding ProductName}" FontSize="14" FontWeight="Medium" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TotalQty, StringFormat={}{0} Adet/Birim}" FontSize="13" Foreground="#64748B" Margin="15,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TotalRevenue, StringFormat=C, ConverterCulture=tr-TR}" FontSize="14" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
+            </Border>
 
-            </StackPanel>
-        </ScrollViewer>
+            <Border Grid.Column="2" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="24">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="💡 Raporlama Hakkında" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,15"/>
+                    <TextBlock Text="• Tahsilat (Giren Nakit): Müşterilerinizden peşin veya sonradan aldığınız tüm ödemelerin toplamıdır." 
+                               TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,10" LineHeight="20"/>
+                    <TextBlock Text="• Ödemeler (Çıkan Nakit): Tedarikçilerinize yaptığınız peşin veya sonradan ödemelerin toplamıdır." 
+                               TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,10" LineHeight="20"/>
+                    <TextBlock Text="• Toplam Satış Hacmi: Satılan ürünlerin toplam parasal değeridir. Kasanıza girmemiş (borçlu) satışlar da bu hacme dahildir." 
+                               TextWrapping="Wrap" Foreground="#475569" LineHeight="20"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

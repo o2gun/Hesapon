@@ -1,5 +1,6 @@
 using ConstruxERP.Models;
 using ConstruxERP.Services;
+using CsvHelper;
 using System;
 using System.Windows;
 
@@ -10,6 +11,7 @@ namespace ConstruxERP.Dialogs
         private readonly SaleService      _saleService      = new();
         private readonly InventoryService _inventoryService = new();
         private readonly CustomerService  _customerService  = new();
+        private readonly int? _preSelectedCustomerId;
 
         public AddSaleDialog()
         {
@@ -72,6 +74,7 @@ namespace ConstruxERP.Dialogs
             { ShowError("Please enter a valid unit price."); return; }
 
             decimal paid = decimal.TryParse(TxtPaid.Text, out var pd) ? pd : 0;
+            DateTime selectedDate = DpSaleDate.SelectedDate ?? DateTime.Now;
 
             try
             {
@@ -81,7 +84,8 @@ namespace ConstruxERP.Dialogs
                     ProductId  = product.Id,
                     Qty        = qty,
                     UnitPrice  = unitPrice,
-                    AmountPaid = paid
+                    AmountPaid = paid,
+                    SaleDate   = selectedDate.ToString("yyyy-MM-dd HH:mm:ss")
                 };
 
                 _saleService.CreateSale(sale);
@@ -92,6 +96,16 @@ namespace ConstruxERP.Dialogs
             {
                 ShowError(ex.Message);
             }
+        }
+        public AddSaleDialog(int? customerId = null)
+        {
+            _preSelectedCustomerId = customerId;
+            InitializeComponent();
+            LoadDropdowns();
+            DpSaleDate.SelectedDate = DateTime.Now;
+
+            if (_preSelectedCustomerId.HasValue)
+                CmbCustomer.SelectedValue = _preSelectedCustomerId.Value;
         }
 
         private void ShowError(string message)

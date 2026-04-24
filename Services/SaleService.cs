@@ -15,6 +15,16 @@ namespace ConstruxERP.Services
         private readonly ProductRepository _productRepo = new();
         private readonly CustomerRepository _customerRepo = new();
 
+        public List<Sale> GetAll(string search = "", int page = 1, int pageSize = 500)
+        {
+            return _saleRepo.GetAll(search, page, pageSize);
+        }
+
+        public List<Sale> GetByDateRange(DateTime from, DateTime to)
+        {
+            return _saleRepo.GetByDateRange(from, to);
+        }
+
         /// <summary>Creates a new sale after validating stock and customer existence.</summary>
         public int CreateSale(Sale sale)
         {

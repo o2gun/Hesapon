@@ -52,6 +52,39 @@ namespace ConstruxERP.Repositories
                     created_at      TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
                 );
 
+                CREATE TABLE IF NOT EXISTS suppliers (
+                    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name            TEXT    NOT NULL,
+                    phone           TEXT    NOT NULL DEFAULT '',
+                    email           TEXT    NOT NULL DEFAULT '',
+                    address         TEXT    NOT NULL DEFAULT '',
+                    billing_address TEXT    NOT NULL DEFAULT '',
+                    total_debt      REAL    NOT NULL DEFAULT 0,
+                    created_at      TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+                );
+
+                CREATE TABLE IF NOT EXISTS purchases (
+                    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                    supplier_id    INTEGER NOT NULL REFERENCES suppliers(id),
+                    product_id     INTEGER NOT NULL REFERENCES products(id),
+                    qty            REAL    NOT NULL,
+                    unit_price     REAL    NOT NULL,
+                    total_price    REAL    NOT NULL,
+                    amount_paid    REAL    NOT NULL DEFAULT 0,
+                    remaining_debt REAL    NOT NULL DEFAULT 0,
+                    note           TEXT    NOT NULL DEFAULT '',
+                    purchase_date  TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+                );
+
+                CREATE TABLE IF NOT EXISTS supplier_payments (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    supplier_id  INTEGER NOT NULL REFERENCES suppliers(id),
+                    purchase_id  INTEGER REFERENCES purchases(id),
+                    amount       REAL    NOT NULL,
+                    paid_at      TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
+                    notes        TEXT    NOT NULL DEFAULT ''
+                );
+
                 CREATE TABLE IF NOT EXISTS products (
                     id             INTEGER PRIMARY KEY AUTOINCREMENT,
                     name           TEXT    NOT NULL,
@@ -105,6 +138,7 @@ namespace ConstruxERP.Repositories
             // ── Incremental ALTER TABLE migrations (safe to run multiple times) ─
             AddColumnIfMissing(conn, "customers", "billing_address", "TEXT NOT NULL DEFAULT ''");
             AddColumnIfMissing(conn, "sales", "note", "TEXT NOT NULL DEFAULT ''");
+            AddColumnIfMissing(conn, "suppliers", "billing_address", "TEXT NOT NULL DEFAULT ''");
         }
 
         /// <summary>

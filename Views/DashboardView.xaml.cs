@@ -1,6 +1,5 @@
 using ConstruxERP.Services;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,91 +8,74 @@ namespace ConstruxERP.Views
 {
     public partial class DashboardView : UserControl
     {
-        private readonly SaleService      _saleService      = new();
+        private readonly SaleService _saleService = new();
         private readonly InventoryService _inventoryService = new();
-        private readonly CustomerService  _customerService  = new();
+        private readonly CustomerService _customerService = new();
+        private bool _isUpdatingDates = false;
 
         public DashboardView()
         {
             InitializeComponent();
         }
 
-        private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadData();
-
-        public void LoadData()
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            TxtDate.Text = DateTime.Now.ToString("dddd, MMMM d, yyyy — Overview");
+            SetQuickFilter(1);
+            LoadLists();
+        }
 
-            // KPI cards
-            TxtTodaySales.Text   = _saleService.GetTodayTotal().ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-            TxtMonthlySales.Text = _saleService.GetMonthlyTotal().ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-            TxtActiveOrders.Text = _saleService.GetTodayOrders().ToString();
-
-            var debtors   = _customerService.GetDebtors();
-            decimal total = _customerService.GetTotalOutstandingDebt();
-            TxtPendingDebt.Text = total.ToString("C", new CultureInfo("tr-TR"));
-            TxtDebtors.Text     = $"{debtors.Count} Müşteri";
-
-            // Low stock warnings
-            var lowStock = _inventoryService.GetLowStockProducts();
-            TxtLowStockCount.Text = $"{lowStock.Count} ürün{(lowStock.Count == 1 ? "" : "s")}";
-
-            if (lowStock.Count == 0)
+        private void BtnQuickFilter_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out int months))
             {
-                TxtNoLowStock.Visibility = Visibility.Visible;
-                LowStockList.ItemsSource  = null;
-            }
-            else
-            {
-                TxtNoLowStock.Visibility = Visibility.Collapsed;
-                LowStockList.ItemsSource = lowStock
-                    .Select(p => new
-                    {
-                        p.Name,
-                        p.Category,
-                        StockDisplay = $"{p.StockQty} / {p.MinStock}"
-                    })
-                    .ToList();
-            }
-
-            // Recent sales (last 8)
-            var sales = _saleService.GetSales(page: 1, pageSize: 8);
-            RecentSalesList.ItemsSource = sales
-                .Select(s => new
-                {
-                    s.CustomerName,
-                    s.ProductName,
-                    SaleDate     = s.SaleDate.Length >= 10 ? s.SaleDate[..10] : s.SaleDate,
-                    TotalDisplay = s.TotalPrice.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
-                    StatusLabel  = s.RemainingDebt == 0 ? "Ödendi"
-                                 : s.AmountPaid   == 0 ? "Ödenmedi" : "Taksitli",
-                    StatusBg     = s.RemainingDebt == 0 ? "#DCFCE7"
-                                 : s.AmountPaid   == 0 ? "#FEE2E2" : "#FEF3C7",
-                    StatusFg     = s.RemainingDebt == 0 ? "#059669"
-                                 : s.AmountPaid   == 0 ? "#DC2626" : "#D97706"
-                })
-                .ToList();
-
-            // Outstanding debtors list
-            if (debtors.Count == 0)
-            {
-                TxtNoDebt.Visibility = Visibility.Visible;
-                DebtList.ItemsSource  = null;
-            }
-            else
-            {
-                TxtNoDebt.Visibility = Visibility.Collapsed;
-                DebtList.ItemsSource = debtors
-                    .Select(c => new { c.Name, DebtDisplay = c.TotalDebt.ToString("C", new CultureInfo("tr-TR")) })
-                    .ToList();
+                SetQuickFilter(months);
             }
         }
-        
-        private void BtnNewSale_Click(object sender, RoutedEventArgs e)
+
+        private void SetQuickFilter(int monthsBack)
         {
-            var dlg = new Dialogs.AddSaleDialog { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() == true)
-                LoadData();
+            _isUpdatingDates = true;
+            DpEnd.SelectedDate = DateTime.Today;
+            DpStart.SelectedDate = DateTime.Today.AddMonths(-monthsBack);
+            _isUpdatingDates = false;
+
+            LoadKPIs();
+        }
+
+        private void DpDate_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_isUpdatingDates) LoadKPIs();
+        }
+
+        private void LoadKPIs()
+        {
+            DateTime start = DpStart.SelectedDate ?? DateTime.Today.AddMonths(-1);
+            DateTime end = DpEnd.SelectedDate ?? DateTime.Today;
+
+            end = end.Date.AddDays(1).AddTicks(-1);
+
+            var salesInPeriod = _saleService.GetAll()
+                .Where(s => {
+                    if (DateTime.TryParse(s.SaleDate, out DateTime dt))
+                        return dt >= start && dt <= end;
+                    return false;
+                }).ToList();
+
+            decimal totalSales = salesInPeriod.Sum(s => s.TotalPrice);
+            decimal totalRevenue = salesInPeriod.Sum(s => s.AmountPaid);
+            decimal totalDebtGenerated = salesInPeriod.Sum(s => s.RemainingDebt);
+
+            var tr = new System.Globalization.CultureInfo("tr-TR");
+            TxtPeriodSales.Text = totalSales.ToString("C", tr);
+            TxtPeriodRevenue.Text = totalRevenue.ToString("C", tr);
+            TxtPeriodDebt.Text = totalDebtGenerated.ToString("C", tr);
+        }
+
+        private void LoadLists()
+        {
+            ListLowStock.ItemsSource = _inventoryService.GetLowStockProducts().Take(10).ToList();
+            ListRecentSales.ItemsSource = _saleService.GetAll().Take(10).ToList();
+            ListDebtors.ItemsSource = _customerService.GetDebtors().Take(10).ToList();
         }
     }
 }

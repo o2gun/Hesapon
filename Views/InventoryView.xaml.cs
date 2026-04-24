@@ -10,64 +10,31 @@ namespace ConstruxERP.Views
     public partial class InventoryView : UserControl
     {
         private readonly InventoryService _service = new();
+        private readonly PurchaseService _purchaseService = new();
+        private int _selectedProductId = 0;
 
-        private int    _currentPage = 1;
-        private int    _totalPages  = 1;
-        private const int PageSize  = 20;
-        private string _search      = "";
-
-        public InventoryView()
-        {
-            InitializeComponent();
-        }
+        public InventoryView() { InitializeComponent(); }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadData();
 
         private void LoadData()
         {
-            var products = _service.GetProducts(_search);
-            int total    = products.Count;
+            if (GridList.Visibility != Visibility.Visible) return;
+            var products = _service.GetProducts(TxtSearch.Text.Trim());
+            TxtProductCount.Text = $"{products.Count} Ürün";
 
-            // Client-side pagination (dataset is small)
-            _totalPages  = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
-            _currentPage = Math.Min(_currentPage, _totalPages);
-
-            TxtProductCount.Text = $"{total} Total Item{(total == 1 ? "" : "s")}";
-            TxtPagingInfo.Text   = $"Showing {Math.Min(PageSize, total - (_currentPage-1)*PageSize)} of {total} results";
-            TxtPageNum.Text      = $"Page {_currentPage} / {_totalPages}";
-            BtnPrev.IsEnabled    = _currentPage > 1;
-            BtnNext.IsEnabled    = _currentPage < _totalPages;
-
-            var page = products
-                .Skip((_currentPage - 1) * PageSize)
-                .Take(PageSize)
-                .ToList();
-
-            TxtEmpty.Visibility  = page.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-
-            ProductList.ItemsSource = page.Select(p => new
-            {
+            ProductList.ItemsSource = products.Select(p => new {
                 p.Id,
                 p.Name,
                 p.Category,
-                p.Unit,
-                p.Sku,
-                p.SupplierName,
-                StockQty            = p.StockQty.ToString("G"),
-                MinStock            = p.MinStock.ToString("G"),
+                StockDisplay = $"{p.StockQty} {p.Unit}",
                 PurchasePriceDisplay = p.PurchasePrice.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
-                SalePriceDisplay    = p.SalePrice.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
-                StockColor          = p.IsLowStock ? "#EF4444" : "#0F172A",
-                StripColor          = p.IsLowStock ? "#EF4444" : "Transparent"
+                SalePriceDisplay = p.SalePrice.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
+                StockColor = p.IsLowStock ? "#EF4444" : "#0F172A"
             });
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            _search = TxtSearch.Text.Trim();
-            _currentPage = 1;
-            LoadData();
-        }
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => LoadData();
 
         private void BtnAddProduct_Click(object sender, RoutedEventArgs e)
         {
@@ -75,25 +42,45 @@ namespace ConstruxERP.Views
             if (dlg.ShowDialog() == true) LoadData();
         }
 
-        private void BtnEdit_Click(object sender, RoutedEventArgs e)
+        private void BtnViewDetail_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is int id)
             {
+                _selectedProductId = id;
                 var product = _service.GetProduct(id);
-                if (product == null) return;
-                var dlg = new Dialogs.AddEditProductDialog(product) { Owner = Window.GetWindow(this) };
-                if (dlg.ShowDialog() == true) LoadData();
+                TxtDetailProductName.Text = $"{product.Name} - Stok: {product.StockQty} {product.Unit}";
+
+                GridList.Visibility = Visibility.Collapsed;
+                GridDetail.Visibility = Visibility.Visible;
+                LoadPurchaseHistory();
             }
         }
 
-        private void BtnPrev_Click(object sender, RoutedEventArgs e)
+        private void BtnBackToList_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentPage > 1) { _currentPage--; LoadData(); }
+            GridDetail.Visibility = Visibility.Collapsed;
+            GridList.Visibility = Visibility.Visible;
+            _selectedProductId = 0;
+            LoadData(); // Stok deðiþmiþ olabilir
         }
 
-        private void BtnNext_Click(object sender, RoutedEventArgs e)
+        private void LoadPurchaseHistory()
         {
-            if (_currentPage < _totalPages) { _currentPage++; LoadData(); }
+            var purchases = _purchaseService.GetPurchasesByProduct(_selectedProductId);
+            PurchaseList.ItemsSource = purchases;
+        }
+
+        private void BtnEditPurchase_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is int purchaseId)
+            {
+                // Düzenleme iþlemi için basitleþtirilmiþ Input varsayýmý
+                // Gerçek senaryoda bu iþlem için EditPurchaseDialog tasarlayabilirsiniz.
+                // Þimdilik test amaçlý deðerlerin deðiþtirildiðini simüle eden bir arayüz veya Dialog gerekecek.
+                MessageBox.Show("Alým düzenleme ekraný açýlacak. Veritabaný PurchaseService.UpdatePurchase altyapýsý hazýrdýr.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Örnek Çaðrý: _purchaseService.UpdatePurchase(purchaseId, 1200, 50, "2024-05-15");
+                // LoadPurchaseHistory();
+            }
         }
     }
 }

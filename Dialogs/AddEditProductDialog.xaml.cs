@@ -9,31 +9,41 @@ namespace ConstruxERP.Dialogs
     {
         private readonly InventoryService _service = new();
         private readonly Product? _editProduct;
+        private readonly SupplierService _supplierService = new();
 
+        /// <summary>Constructor for ADD mode.</summary>
         /// <summary>Constructor for ADD mode.</summary>
         public AddEditProductDialog()
         {
             InitializeComponent();
-            TxtTitle.Text = "Add New Product";
+            TxtTitle.Text = "Yeni Ürün Ekle";
+
+            CmbSupplier.ItemsSource = _supplierService.GetAll();
+            CmbSupplier.DisplayMemberPath = "Name";
+            CmbSupplier.SelectedValuePath = "Name";
         }
 
         /// <summary>Constructor for EDIT mode.</summary>
         public AddEditProductDialog(Product product) : this()
         {
-            _editProduct = product;
-            TxtTitle.Text = "Edit Product";
 
-            // Pre-fill fields
-            TxtName.Text         = product.Name;
-            TxtCategory.Text     = product.Category;
-            CmbUnit.Text         = product.Unit;
-            TxtPurchasePrice.Text = product.PurchasePrice.ToString("F2");
-            TxtSalePrice.Text    = product.SalePrice.ToString("F2");
-            TxtStock.Text        = product.StockQty.ToString("G");
-            TxtMinStock.Text     = product.MinStock.ToString("G");
-            TxtSupplier.Text     = product.SupplierName;
-            TxtSku.Text          = product.Sku;
-            TxtNotes.Text        = product.Notes;
+            TxtTitle.Text = "Ürünü Düzenle"; // Başlığı düzenleme moduna uygun yapalım
+
+            if (product != null)
+            {
+                // Pre-fill fields
+                _editProduct = product;
+                TxtName.Text = product.Name;
+                TxtCategory.Text = product.Category;
+                CmbUnit.Text = product.Unit;
+                TxtPurchasePrice.Text = product.PurchasePrice.ToString("F2");
+                TxtSalePrice.Text = product.SalePrice.ToString("F2");
+                TxtStock.Text = product.StockQty.ToString("G");
+                TxtMinStock.Text = product.MinStock.ToString("G");
+                TxtSku.Text = product.Sku;
+                TxtNotes.Text = product.Notes;
+                CmbSupplier.Text = product.SupplierName;
+            }
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -62,6 +72,17 @@ namespace ConstruxERP.Dialogs
 
             try
             {
+                string supplierName = CmbSupplier.Text.Trim();
+                if (!string.IsNullOrEmpty(supplierName))
+                {
+                    var existing = _supplierService.GetAll().FirstOrDefault(s => s.Name.Equals(supplierName, StringComparison.OrdinalIgnoreCase));
+                    if (existing == null)
+                    {
+                        // Eğer yazılan tedarikçi veritabanında yoksa, otomatik olarak suppliers tablosuna kaydet!
+                        _supplierService.AddSupplier(new Supplier { Name = supplierName });
+                    }
+                }
+
                 var product = new Product
                 {
                     Id            = _editProduct?.Id ?? 0,
@@ -72,7 +93,6 @@ namespace ConstruxERP.Dialogs
                     SalePrice     = sp,
                     StockQty      = stock,
                     MinStock      = minStock,
-                    SupplierName  = TxtSupplier.Text.Trim(),
                     Sku           = TxtSku.Text.Trim(),
                     Notes         = TxtNotes.Text.Trim()
                 };

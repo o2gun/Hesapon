@@ -141,5 +141,11 @@ namespace ConstruxERP.Dialogs
             if (dlg.ShowDialog() == true)
                 LoadAll();   // Refresh after payment
         }
+        private void BtnNewSale_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new AddSaleDialog(_customerId) { Owner = this };
+            if (dlg.ShowDialog() == true)
+                LoadAll();   // Kayıttan sonra pencereyi tazele
+        }
     }
 }

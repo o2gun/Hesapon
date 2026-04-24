@@ -20,7 +20,23 @@ namespace ConstruxERP.Services
         public void AddProduct(Product p)
         {
             Validate(p);
-            _repo.Insert(p);
+
+            var allProducts = _repo.GetAll();
+            var existing = allProducts.Find(x =>
+                x.Name.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(p.Sku) && x.Sku.Equals(p.Sku, StringComparison.OrdinalIgnoreCase)));
+
+            if (existing != null)
+            {
+                _repo.AdjustStock(existing.Id, p.StockQty);
+                existing.PurchasePrice = p.PurchasePrice > 0 ? p.PurchasePrice : existing.PurchasePrice;
+                existing.SalePrice = p.SalePrice > 0 ? p.SalePrice : existing.SalePrice;
+                _repo.Update(existing);
+            }
+            else
+            {
+                _repo.Insert(p);
+            }
         }
 
         public void UpdateProduct(Product p)

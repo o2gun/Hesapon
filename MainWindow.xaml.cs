@@ -23,6 +23,7 @@ namespace ConstruxERP
                 ["Sales"]       = () => new SalesView(),
                 ["Inventory"]   = () => new InventoryView(),
                 ["Customers"]   = () => new CustomersView(),
+                ["Suppliers"]   = () => new SuppliersView(),
                 ["Reports"]     = () => new ReportsView(),
                 ["DebtReports"] = () => new DebtReportsView(),
                 ["Backup"]      = () => new BackupView(),

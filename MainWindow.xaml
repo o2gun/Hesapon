@@ -110,6 +110,15 @@
                             </StackPanel>
                         </Button>
 
+                        <Button x:Name="BtnSuppliers"
+                                Style="{StaticResource NavButton}"
+                                Click="NavButton_Click" Tag="Suppliers">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👥" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="Tedarikçiler" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <!-- FINANCE -->
                         <TextBlock Text="FİNANS"
                                    FontSize="10" FontWeight="SemiBold"

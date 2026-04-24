@@ -36,8 +36,11 @@
                       Margin="0,0,0,14" IsEditable="True"
                       SelectionChanged="CmbProduct_SelectionChanged"/>
 
+            <TextBlock Text="Satış Tarihi" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,4,0,4"/>
+            <DatePicker x:Name="DpSaleDate" Language="tr-TR" Width="200" HorizontalAlignment="Left" Style="{StaticResource {x:Type DatePicker}}"/>
+
             <!-- Adet + Birim Fiyat -->
-            <Grid Margin="0,0,0,14">
+            <Grid Margin="0,14,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="16"/>

@@ -39,13 +39,20 @@
                 </StackPanel>
 
                 <!-- Edit button -->
-                <Button x:Name="BtnEdit"
-                        Content="✏ Düzenle"
-                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Style="{StaticResource SecondaryButton}"
-                        Height="34" Padding="14,0"
-                        Background="#1E293B" BorderBrush="#334155" Foreground="#94A3B8"
-                        Click="BtnEdit_Click"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="BtnNewSale"
+                            Content="🛒 Yeni Satış"
+                            Style="{StaticResource PrimaryButton}"
+                            Height="34" Padding="14,0" Margin="0,0,10,0"
+                            Click="BtnNewSale_Click"/>
+
+                    <Button x:Name="BtnEdit"
+                            Content="✏ Düzenle"
+                            Style="{StaticResource SecondaryButton}"
+                            Height="34" Padding="14,0"
+                            Background="#1E293B" BorderBrush="#334155" Foreground="#94A3B8"
+                            Click="BtnEdit_Click"/>
+                </StackPanel>
             </Grid>
         </Border>
 

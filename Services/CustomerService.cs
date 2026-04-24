@@ -10,7 +10,11 @@ namespace ConstruxERP.Services
     {
         private readonly CustomerRepository _repo = new();
 
-        public List<Customer> GetAll(string search = "") => _repo.GetAll(search);
+        public List<Customer> GetAll(string search = "", bool searchName = true, bool searchPhone = true, bool searchAddress = true, decimal minDebt = 0, int page = 1, int pageSize = 100)
+        => _repo.GetAll(search, searchName, searchPhone, searchAddress, minDebt, page, pageSize);
+
+        public int CountAll(string search = "", bool searchName = true, bool searchPhone = true, bool searchAddress = true, decimal minDebt = 0)
+            => _repo.CountAll(search, searchName, searchPhone, searchAddress, minDebt);
         public List<Customer> GetDebtors() => _repo.GetWithDebt();
         public Customer? GetById(int id) => _repo.GetById(id);
 
@@ -90,7 +94,7 @@ namespace ConstruxERP.Services
             using var conn = DatabaseContext.GetConnection();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = "SELECT COALESCE(SUM(total_debt),0) FROM customers";
-            return (decimal)(double)cmd.ExecuteScalar()!;
+            return Convert.ToDecimal(cmd.ExecuteScalar());
         }
     }
 }

@@ -8,196 +8,318 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ── Header Bar ──────────────────────────────────────────────────── -->
-        <Border Grid.Row="0" Background="White"
-                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="28,16">
+        <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="28,16">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Başlık (Cursor="" kaldırıldı) -->
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Müşteriler"
-                               Style="{StaticResource PageTitle}" FontSize="20"/>
-                    <TextBlock Text="Müşterileri yönetin ve açık borçları takip edin"
-                               FontSize="12" Foreground="{StaticResource TextSecondary}"
-                               Margin="0,2,0,0"/>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                    <TextBlock Text="Müşteriler" Style="{StaticResource PageTitle}" FontSize="20"/>
+                    <TextBlock Text="Arama paneli ve müşteri yönetimi" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
                 </StackPanel>
 
-                <TextBox Grid.Column="1" x:Name="TxtSearch"
-                         Style="{StaticResource SearchBox}"
-                         TextChanged="TxtSearch_TextChanged"/>
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBox x:Name="TxtSearch" Width="200" Margin="0,0,10,5" Style="{StaticResource SearchBox}" TextChanged="FilterChanged"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,15,5" VerticalAlignment="Center">
+                        <CheckBox x:Name="ChkSearchName" Content="Ad" IsChecked="True" Margin="0,0,5,0" Click="FilterChanged"/>
+                        <CheckBox x:Name="ChkSearchPhone" Content="Telefon" IsChecked="True" Margin="0,0,5,0" Click="FilterChanged"/>
+                        <CheckBox x:Name="ChkSearchAddress" Content="Adres" IsChecked="True" Click="FilterChanged"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,10,5" VerticalAlignment="Center">
+                        <TextBlock Text="Min Borç:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#64748B" FontSize="12"/>
+                        <TextBox x:Name="TxtMinDebt" Width="80" Text="0" Padding="4" TextChanged="FilterChanged"/>
+                    </StackPanel>
+                </WrapPanel>
 
-                <Button Grid.Column="3" Content="+ Müşteri Ekle"
-                        Style="{StaticResource PrimaryButton}"
+                <Button Grid.Column="2" Content="+ Müşteri Ekle" Style="{StaticResource PrimaryButton}"
                         Click="BtnAddCustomer_Click" Height="36" Padding="14,0"/>
             </Grid>
         </Border>
 
-        <!-- ── Customer Table ─────────────────────────────────────────────── -->
-        <Border Grid.Row="1" Background="White">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+        <Grid x:Name="GridList" Grid.Row="1" Visibility="Visible">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="White">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                            <Grid Margin="28,0" Height="38">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="MÜŞTERİ ADI" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="TELEFON" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="TOPLAM ALIŞVERİŞ" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="3" Text="TAHSİL EDİLEN" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="4" Text="KALAN BORÇ" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="5" Text="İŞLEMLER" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
 
-                    <!-- Column Headers
-                         Sütun genişlikleri:
-                         Col 0 (İsim)    : 220  — avatar + metin için biraz geniş
-                         Col 1 (Telefon) : 130
-                         Col 2 (Toplam)  : 130
-                         Col 3 (Tahsil)  : 120
-                         Col 4 (Borç)    : 130
-                         Col 5 (İşlemler): *    — geri kalan tüm alanı doldurur
-                    -->
-                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-                        <Grid Margin="28,0" Height="38">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
-                                <ColumnDefinition Width="130"/>
-                                <ColumnDefinition Width="130"/>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="130"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="MÜŞTERİ ADI"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="TELEFON"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="TOPLAM ALIŞVERİŞ"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="3" Text="TAHSİL EDİLEN"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="4" Text="KALAN BORÇ"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="5" Text="İŞLEMLER"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="#64748B" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Data Rows -->
-                    <ItemsControl x:Name="CustomerList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <Border Background="{Binding RowBg}">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#F8FAFC"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <Grid Margin="28,0" Height="60">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="220"/>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="120"/>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Col 0: Avatar + İsim -->
-                                            <StackPanel Grid.Column="0"
-                                                        Orientation="Horizontal"
-                                                        VerticalAlignment="Center">
-                                                <Border Width="34" Height="34"
-                                                        CornerRadius="17"
-                                                        Background="{Binding AvatarBg}">
-                                                    <TextBlock Text="{Binding Initials}"
-                                                               FontSize="12" FontWeight="Bold"
-                                                               Foreground="{Binding AvatarFg}"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center"/>
+                        <ListBox x:Name="CustomerList" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <Border>
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{Binding RowBg}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                            <Setter Property="Background" Value="#E2E8F0"/>
+                                                        </DataTrigger>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True"/>
+                                                                <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="False"/>
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Background" Value="#F8FAFC"/>
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid Margin="28,0" Height="60">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="130"/>
+                                                    <ColumnDefinition Width="130"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="130"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Width="34" Height="34" CornerRadius="17" Background="{Binding AvatarBg}">
+                                                        <TextBlock Text="{Binding Initials}" FontSize="12" FontWeight="Bold" Foreground="{Binding AvatarFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center" Margin="9,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Phone}" FontSize="13" Foreground="#374151" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding TotalPurchasesDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding TotalPaidDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Green}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="4" Background="{Binding DebtBg}" CornerRadius="4" Padding="8,3" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding DebtDisplay}" FontSize="13" FontWeight="Bold" Foreground="{Binding DebtFg}"/>
                                                 </Border>
-                                                <TextBlock Text="{Binding Name}"
-                                                           FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="#0F172A"
-                                                           VerticalAlignment="Center"
-                                                           Margin="9,0,0,0"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           MaxWidth="150"/>
+                                                <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Görüntüle" Style="{StaticResource SecondaryButton}" Height="28" Padding="12,0" Tag="{Binding Id}" Click="BtnView_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                        <Rectangle Height="1" Fill="#F1F5F9" Margin="28,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock x:Name="TxtEmpty" Text="Kayıtlı müşteri bulunamadı." FontSize="14" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,48" Visibility="Collapsed"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+            <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="28,12">
+                <Grid>
+                    <TextBlock x:Name="TxtPagingInfo" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="BtnPrevPage" Content="Önceki" Padding="10,4" Margin="0,0,10,0" Click="BtnPrevPage_Click"/>
+                        <TextBlock x:Name="TxtPageNumber" Text="Sayfa 1 / 1" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#64748B"/>
+                        <Button x:Name="BtnNextPage" Content="Sonraki" Padding="10,4" Click="BtnNextPage_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="GridDetail" Grid.Row="1" Visibility="Collapsed" Background="#F8FAFC">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#0F172A" Padding="24,18">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="← Geri Dön" Style="{StaticResource SecondaryButton}" Background="#1E293B" Foreground="White" BorderBrush="#334155" Margin="0,0,15,0" Click="BtnBackToList_Click"/>
+                        <Border Width="40" Height="40" CornerRadius="20" Background="#2563EB">
+                            <TextBlock x:Name="TxtInitials" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtDetailName" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                <TextBlock x:Name="TxtDetailPhone" FontSize="12" Foreground="#64748B"/>
+                                <TextBlock Text="  ·  " FontSize="12" Foreground="#334155"/>
+                                <TextBlock x:Name="TxtDetailEmail" FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Excel'e Aktar" Style="{StaticResource SecondaryButton}" Background="#1E293B" Foreground="#10B981" BorderBrush="#334155" Height="34" Padding="14,0" Margin="0,0,10,0" Click="BtnExportExcel_Click"/>
+                        <Button Content="✏ Düzenle" Style="{StaticResource SecondaryButton}" Background="#1E293B" Foreground="#94A3B8" BorderBrush="#334155" Height="34" Padding="14,0" Margin="0,0,10,0" Click="BtnEditCustomer_Click"/>
+                        <Button Content="🛒 Yeni Satış" Style="{StaticResource PrimaryButton}" Height="34" Padding="14,0" Click="BtnNewSale_Click"/>
+                        <Button Content="💳 Tahsilat" Style="{StaticResource PrimaryButton}" Background="#10B981" Height="34" Padding="14,0" Margin="10,0,0,0" Click="BtnPayDebt_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Tarih Aralığı:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,10,0"/>
+                        <DatePicker x:Name="DpStart" Width="110" SelectedDateChanged="DetailFilterChanged"/>
+                        <TextBlock Text="-" VerticalAlignment="Center" Margin="8,0"/>
+                        <DatePicker x:Name="DpEnd" Width="110" SelectedDateChanged="DetailFilterChanged"/>
+                        <Button Content="Temizle" Style="{StaticResource SecondaryButton}" Height="24" Padding="8,0" Margin="10,0,0,0" Click="BtnClearDates_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <StackPanel Margin="15,0">
+                            <TextBlock Text="SEÇİLİ DÖNEM ALIŞVERİŞ" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
+                            <TextBlock x:Name="TxtPeriodPurchases" Text="₺0,00" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Margin="15,0">
+                            <TextBlock Text="SEÇİLİ DÖNEM ÖDENEN" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
+                            <TextBlock x:Name="TxtPeriodPaid" Text="₺0,00" FontSize="16" FontWeight="Bold" Foreground="#10B981" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Margin="15,0,0,0" Background="#FEF2F2">
+                            <TextBlock Text="GÜNCEL TOPLAM BORÇ" FontSize="10" FontWeight="SemiBold" Foreground="#DC2626"/>
+                            <TextBlock x:Name="TxtCurrentTotalDebt" Text="₺0,00" FontSize="16" FontWeight="Bold" Foreground="#DC2626" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2" Margin="20,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.2*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Padding="14,10" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Background="#F8FAFC" CornerRadius="8,8,0,0">
+                            <TextBlock Text="🛒  Alım Geçmişi (Birim Fiyat Analizi)" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                        </Border>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <Grid Margin="12,8" Height="24">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="TARİH" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="ÜRÜN" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="ADET" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="B. FİYAT" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="TOPLAM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <ItemsControl x:Name="DetailSalesList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Grid Margin="12,6" MinHeight="30">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="60"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding DateShort}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding ProductName}" FontSize="12" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding QtyDisplay}" FontSize="12" Foreground="#374151" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding UnitPriceDisplay}" FontSize="12" Foreground="#2563EB" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="4" Text="{Binding Total}" FontSize="12" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                                <Rectangle Height="1" Fill="#F1F5F9" Margin="12,0"/>
                                             </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
 
-                                            <!-- Col 1: Telefon -->
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding Phone}"
-                                                       FontSize="13" Foreground="#374151"
-                                                       VerticalAlignment="Center"/>
-
-                                            <!-- Col 2: Toplam Alışveriş -->
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding TotalPurchasesDisplay}"
-                                                       FontSize="13" FontWeight="SemiBold"
-                                                       Foreground="#0F172A"
-                                                       VerticalAlignment="Center"/>
-
-                                            <!-- Col 3: Tahsil Edilen -->
-                                            <TextBlock Grid.Column="3"
-                                                       Text="{Binding TotalPaidDisplay}"
-                                                       FontSize="13" FontWeight="SemiBold"
-                                                       Foreground="{StaticResource Green}"
-                                                       VerticalAlignment="Center"/>
-
-                                            <!-- Col 4: Kalan Borç chip -->
-                                            <Border Grid.Column="4"
-                                                    Background="{Binding DebtBg}"
-                                                    CornerRadius="4" Padding="8,3"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Left">
-                                                <TextBlock Text="{Binding DebtDisplay}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="{Binding DebtFg}"/>
-                                            </Border>
-
-                                            <!-- Col 5: Butonlar (sol hizalı, * sütun içinde) -->
-                                            <StackPanel Grid.Column="5"
-                                                        Orientation="Horizontal"
-                                                        VerticalAlignment="Center">
-                                                <Button Content="Görüntüle"
-                                                        Style="{StaticResource SecondaryButton}"
-                                                        Height="28" Padding="12,0"
-                                                        Tag="{Binding Id}"
-                                                        Click="BtnView_Click"/>
+                <Border Grid.Column="2" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Padding="14,10" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Background="#F8FAFC" CornerRadius="8,8,0,0">
+                            <TextBlock Text="💳  Ödeme Geçmişi ve Kalan Bakiye" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                        </Border>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <Grid Margin="12,8" Height="24">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="90"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="TARİH" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="AÇIKLAMA" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="TUTAR" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="SONRAKİ BAKİYE" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <ItemsControl x:Name="DetailPaymentList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Grid Margin="12,6" MinHeight="30">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding DateShort}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Notes}" FontSize="11" Foreground="#374151" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding AmountDisplay}" FontSize="12" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding RemainingDebtDisplay}" FontSize="12" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                                <Rectangle Height="1" Fill="#F1F5F9" Margin="12,0"/>
                                             </StackPanel>
-
-                                        </Grid>
-                                    </Border>
-                                    <Rectangle Height="1" Fill="#F1F5F9" Margin="28,0"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBlock x:Name="TxtEmpty"
-                               Text="Kayıtlı müşteri bulunamadı."
-                               FontSize="14" Foreground="{StaticResource TextMuted}"
-                               HorizontalAlignment="Center" Margin="0,48"
-                               Visibility="Collapsed"/>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
-
-        <!-- ── Footer / Pagination ────────────────────────────────────────── -->
-        <Border Grid.Row="2" Background="White"
-                BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="28,12">
-            <TextBlock x:Name="TxtPagingInfo"
-                       FontSize="13" Foreground="{StaticResource TextSecondary}"
-                       VerticalAlignment="Center"/>
-        </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

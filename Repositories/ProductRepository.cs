@@ -82,7 +82,7 @@ namespace ConstruxERP.Repositories
                 SELECT last_insert_rowid();";
 
             BindParams(cmd, p);
-            return (int)(long)cmd.ExecuteScalar()!;
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
         public void Update(Product p)

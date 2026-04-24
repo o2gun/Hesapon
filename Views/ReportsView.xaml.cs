@@ -1,7 +1,6 @@
 using ConstruxERP.Services;
-using Microsoft.Win32;
 using System;
-using System.Linq;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,122 +9,94 @@ namespace ConstruxERP.Views
     public partial class ReportsView : UserControl
     {
         private readonly ReportService _reportService = new();
-        private readonly SaleService _saleService = new();
+        private bool _isUpdatingDates = false;
+        private static readonly CultureInfo _tr = new("tr-TR");
 
         public ReportsView()
         {
             InitializeComponent();
         }
 
-        private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadData();
-
-        private void CmbPeriod_SelectionChanged(object sender, SelectionChangedEventArgs e) => LoadData();
-
-        private void LoadData()
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            // Guard: CmbPeriod.SelectionChanged fires during InitializeComponent()
-            // before any TextBlock controls are created. Exit early in that case.
-            if (TxtRevenue == null) return;
-
-            var (from, to) = GetDateRange();
-            var data = _reportService.GetReport(from, to);
-
-            // KPI cards
-            TxtRevenue.Text = data.TotalRevenue.ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-            TxtPaid.Text = data.TotalPaid.ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-            TxtDebt.Text = data.TotalDebt.ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-            TxtTxCount.Text = data.TransactionCount.ToString();
-
-            // Top products bar chart
-            decimal maxRev = data.TopProducts.Count > 0
-                ? data.TopProducts.Max(p => p.Revenue) : 1;
-
-            TxtNoProducts.Visibility = data.TopProducts.Count == 0
-                ? Visibility.Visible : Visibility.Collapsed;
-
-            TopProductsList.ItemsSource = data.TopProducts.Select(p => new
-            {
-                p.Product,
-                Revenue = p.Revenue.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
-                BarWidth = Math.Max(8.0, (double)(p.Revenue / maxRev) * 320)
-            });
-
-            // Category bars
-            string[] colours = { "#2563EB", "#7C3AED", "#EF4444", "#F59E0B", "#10B981" };
-            decimal maxCat = data.ByCategory.Count > 0
-                ? data.ByCategory.Max(c => c.Revenue) : 1;
-
-            TxtNoCat.Visibility = data.ByCategory.Count == 0
-                ? Visibility.Visible : Visibility.Collapsed;
-
-            CategoryList.ItemsSource = data.ByCategory
-                .Select((c, i) => new
-                {
-                    Category = string.IsNullOrWhiteSpace(c.Category) ? "Uncategorised" : c.Category,
-                    Revenue = c.Revenue.ToString("C", new System.Globalization.CultureInfo("tr-TR")),
-                    BarWidth = Math.Max(8.0, (double)(c.Revenue / maxCat) * 320),
-                    BarColor = colours[i % colours.Length]
-                });
+            // Varsayýlan olarak Bu Ay filtresini uygula
+            ApplyQuickFilter("ThisMonth");
         }
 
-        private (DateTime from, DateTime to) GetDateRange()
+        private void BtnQuickFilter_Click(object sender, RoutedEventArgs e)
         {
-            int idx = CmbPeriod?.SelectedIndex ?? 1;
-            var now = DateTime.Now;
-            return idx switch
+            if (sender is Button btn && btn.Tag != null)
             {
-                0 => (DateTime.Today, DateTime.Today),
-                1 => (new DateTime(now.Year, now.Month, 1), DateTime.Today),
-                2 => (DateTime.Today.AddMonths(-3), DateTime.Today),
-                3 => (DateTime.Today.AddMonths(-12), DateTime.Today),
-                _ => (new DateTime(now.Year, now.Month, 1), DateTime.Today)
-            };
+                ApplyQuickFilter(btn.Tag.ToString() ?? "");
+            }
         }
 
-        private void BtnExportExcel_Click(object sender, RoutedEventArgs e)
+        private void ApplyQuickFilter(string filterType)
         {
-            var dlg = new SaveFileDialog
+            _isUpdatingDates = true;
+            DateTime today = DateTime.Today;
+
+            switch (filterType)
             {
-                Filter = "Excel Files|*.xlsx",
-                FileName = $"Sales_Report_{DateTime.Now:yyyy_MM_dd}.xlsx"
-            };
-            if (dlg.ShowDialog() != true) return;
+                case "Today":
+                    DpStart.SelectedDate = today;
+                    DpEnd.SelectedDate = today;
+                    break;
+                case "ThisMonth":
+                    DpStart.SelectedDate = new DateTime(today.Year, today.Month, 1);
+                    DpEnd.SelectedDate = new DateTime(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                    break;
+                case "3Months":
+                    DpStart.SelectedDate = today.AddMonths(-3);
+                    DpEnd.SelectedDate = today;
+                    break;
+                case "12Months":
+                    DpStart.SelectedDate = today.AddMonths(-12);
+                    DpEnd.SelectedDate = today;
+                    break;
+            }
+
+            _isUpdatingDates = false;
+            LoadReportData();
+        }
+
+        private void DpDate_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_isUpdatingDates)
+            {
+                LoadReportData();
+            }
+        }
+
+        private void LoadReportData()
+        {
+            DateTime start = DpStart.SelectedDate ?? DateTime.Today;
+            DateTime end = DpEnd.SelectedDate ?? DateTime.Today;
+
+            // Raporlama servisi saatleri dikkate aldýðý için Bitiþ Tarihinin tam olarak 23:59 olmasý saðlanýr 
+            // (Bu iþlem Service içinde yapýldýðý için burada sadece parametre gönderiyoruz)
 
             try
             {
-                var (from, to) = GetDateRange();
-                var sales = _saleService.GetSales(page: 1, pageSize: 100_000);
-                _reportService.ExportSalesToExcel(sales, dlg.FileName);
-                MessageBox.Show("Excel export saved successfully.", "Export Complete",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                // 1. Özet Verileri Çek
+                var summary = _reportService.GetSummary(start, end);
+
+                TxtTotalSales.Text = summary.TotalSales.ToString("C", _tr);
+                TxtTotalCollections.Text = summary.TotalCollections.ToString("C", _tr);
+                TxtTotalPayments.Text = summary.TotalSupplierPayments.ToString("C", _tr);
+
+                TxtNetCashFlow.Text = summary.NetCashFlow.ToString("C", _tr);
+                // Net nakit akýþý eksiye düþerse kýrmýzý yapalým
+                TxtNetCashFlow.Foreground = summary.NetCashFlow >= 0
+                    ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0F172A"))
+                    : new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#EF4444"));
+
+                // 2. En Çok Satan Ürünleri Çek
+                ListTopProducts.ItemsSource = _reportService.GetTopSellingProducts(start, end, 10);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Export failed: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void BtnExportCsv_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new SaveFileDialog
-            {
-                Filter = "CSV Files|*.csv",
-                FileName = $"Sales_Report_{DateTime.Now:yyyy_MM_dd}.csv"
-            };
-            if (dlg.ShowDialog() != true) return;
-
-            try
-            {
-                var sales = _saleService.GetSales(page: 1, pageSize: 100_000);
-                _reportService.ExportSalesToCsv(sales, dlg.FileName);
-                MessageBox.Show("CSV export saved successfully.", "Export Complete",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Export failed: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Raporlar yüklenirken hata oluþtu: " + ex.Message, "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

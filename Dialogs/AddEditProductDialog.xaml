@@ -88,7 +88,8 @@
 
             <TextBlock Text="Aldığımız Şirket" FontSize="12" FontWeight="SemiBold"
                        Foreground="#374151" Margin="0,0,0,5"/>
-            <TextBox x:Name="TxtSupplier" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>
+            <!--<TextBox x:Name="TxtSupplier" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>-->
+            <ComboBox x:Name="CmbSupplier" IsEditable="True" Margin="0,0,0,12" Height="34" Padding="6"/>
 
             <TextBlock Text="SKU / Kodu" FontSize="12" FontWeight="SemiBold"
                        Foreground="#374151" Margin="0,0,0,5"/>
