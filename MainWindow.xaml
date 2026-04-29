@@ -83,15 +83,6 @@
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="BtnSales"
-                                Style="{StaticResource NavButton}"
-                                Click="NavButton_Click" Tag="Sales">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🛒" FontSize="14" VerticalAlignment="Center"/>
-                                <TextBlock Text="Satış Kaydı" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
                         <Button x:Name="BtnInventory"
                                 Style="{StaticResource NavButton}"
                                 Click="NavButton_Click" Tag="Inventory">
@@ -114,7 +105,7 @@
                                 Style="{StaticResource NavButton}"
                                 Click="NavButton_Click" Tag="Suppliers">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="👥" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
                                 <TextBlock Text="Tedarikçiler" Margin="10,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -131,15 +122,6 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📈" FontSize="14" VerticalAlignment="Center"/>
                                 <TextBlock Text="Raporlar &amp; Analiz" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Button x:Name="BtnDebtReports"
-                                Style="{StaticResource NavButton}"
-                                Click="NavButton_Click" Tag="DebtReports">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
-                                <TextBlock Text="Borç Raporları" Margin="10,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

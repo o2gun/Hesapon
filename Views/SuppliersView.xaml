@@ -22,7 +22,7 @@
                     <DataGridTextColumn Header="Firma Adı" Binding="{Binding Name}" Width="*"/>
                     <DataGridTextColumn Header="Telefon" Binding="{Binding Phone}" Width="150"/>
                     <DataGridTextColumn Header="Kayıt Tarihi" Binding="{Binding CreatedAt}" Width="150"/>
-                    <DataGridTextColumn Header="Toplam Borcumuz" Binding="{Binding TotalDebt, StringFormat=C}" Width="150">
+                    <DataGridTextColumn Header="Toplam Borcumuz" Binding="{Binding TotalDebt, StringFormat={}{0:N2} ₺}" Width="150">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Bold"/>

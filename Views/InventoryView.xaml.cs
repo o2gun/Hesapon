@@ -61,7 +61,7 @@ namespace ConstruxERP.Views
             GridDetail.Visibility = Visibility.Collapsed;
             GridList.Visibility = Visibility.Visible;
             _selectedProductId = 0;
-            LoadData(); // Stok deðiþmiþ olabilir
+            LoadData();
         }
 
         private void LoadPurchaseHistory()

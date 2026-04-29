@@ -1,10 +1,5 @@
 ﻿using ConstruxERP.Models;
 using ConstruxERP.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConstruxERP.Services
 {
@@ -45,7 +40,59 @@ namespace ConstruxERP.Services
             return list;
         }
 
-        // Finansal olarak güvenli Alım Düzenleme İşlemi (Delta Hesaplamalı)
+        public void CreatePurchase(Purchase p)
+        {
+            p.TotalPrice = Math.Round(p.Qty * p.UnitPrice, 2);
+            p.AmountPaid = Math.Max(0, Math.Min(p.AmountPaid, p.TotalPrice));
+            p.RemainingDebt = Math.Round(p.TotalPrice - p.AmountPaid, 2);
+
+            if (string.IsNullOrWhiteSpace(p.PurchaseDate))
+                p.PurchaseDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            using var conn = DatabaseContext.GetConnection();
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                using var cmdInsert = conn.CreateCommand();
+                cmdInsert.Transaction = tx;
+                cmdInsert.CommandText = @"
+            INSERT INTO purchases (supplier_id, product_id, qty, unit_price, total_price, amount_paid, remaining_debt, note, purchase_date)
+            VALUES (@sid, @pid, @qty, @up, @tp, @ap, @rd, @note, @date)";
+                cmdInsert.Parameters.AddWithValue("@sid", p.SupplierId);
+                cmdInsert.Parameters.AddWithValue("@pid", p.ProductId);
+                cmdInsert.Parameters.AddWithValue("@qty", p.Qty);
+                cmdInsert.Parameters.AddWithValue("@up", p.UnitPrice);
+                cmdInsert.Parameters.AddWithValue("@tp", p.TotalPrice);
+                cmdInsert.Parameters.AddWithValue("@ap", p.AmountPaid);
+                cmdInsert.Parameters.AddWithValue("@rd", p.RemainingDebt);
+                cmdInsert.Parameters.AddWithValue("@note", p.Note ?? "");
+                cmdInsert.Parameters.AddWithValue("@date", p.PurchaseDate);
+                cmdInsert.ExecuteNonQuery();
+
+                using var cmdStock = conn.CreateCommand();
+                cmdStock.Transaction = tx;
+                cmdStock.CommandText = "UPDATE products SET stock_qty = stock_qty + @qty, purchase_price = @up WHERE id = @pid";
+                cmdStock.Parameters.AddWithValue("@qty", p.Qty);
+                cmdStock.Parameters.AddWithValue("@up", p.UnitPrice);
+                cmdStock.Parameters.AddWithValue("@pid", p.ProductId);
+                cmdStock.ExecuteNonQuery();
+
+                using var cmdDebt = conn.CreateCommand();
+                cmdDebt.Transaction = tx;
+                cmdDebt.CommandText = "UPDATE suppliers SET total_debt = total_debt + @rd WHERE id = @sid";
+                cmdDebt.Parameters.AddWithValue("@rd", p.RemainingDebt);
+                cmdDebt.Parameters.AddWithValue("@sid", p.SupplierId);
+                cmdDebt.ExecuteNonQuery();
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
         public void UpdatePurchase(int purchaseId, decimal newQty, decimal newUnitPrice, string newDate)
         {
             using var conn = DatabaseContext.GetConnection();

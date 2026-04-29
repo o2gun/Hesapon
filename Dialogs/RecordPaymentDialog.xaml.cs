@@ -29,7 +29,7 @@ namespace ConstruxERP.Dialogs
             TxtError.Visibility = Visibility.Collapsed;
 
             if (!decimal.TryParse(TxtAmount.Text, out decimal amount) || amount <= 0)
-            { ShowError("Please enter a valid payment amount greater than zero."); return; }
+            { ShowError("Lütfen sýfýrdan büyük geçerli bir ödeme tutarý girin."); return; }
 
             try
             {

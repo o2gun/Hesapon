@@ -149,15 +149,24 @@
         </StackPanel>
 
         <!-- Footer -->
-        <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0"
-                Padding="24,16" Margin="0,18,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="İptal" Style="{StaticResource SecondaryButton}"
-                        IsCancel="True" Height="38" Padding="18,0"/>
-                <Button Content="✓ Satışı Kaydet" Style="{StaticResource PrimaryButton}"
-                        Height="38" Padding="18,0" Margin="10,0,0,0"
-                        Click="BtnSave_Click"/>
-            </StackPanel>
+        <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,16" Margin="0,18,0,0">
+            <Grid>
+                <Button x:Name="BtnDelete" Content="🗑 Satışı Sil" 
+                Foreground="#DC2626" Background="#FEE2E2" BorderBrush="#FECACA" 
+                BorderThickness="1" HorizontalAlignment="Left" Padding="15,0" Height="38"
+                Click="BtnDelete_Click" Visibility="Collapsed" FontWeight="SemiBold" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="İptal" Style="{StaticResource SecondaryButton}" IsCancel="True" Height="38" Padding="18,0"/>
+                    <Button Content="✓ Kaydet" Style="{StaticResource PrimaryButton}" Height="38" Padding="18,0" Margin="10,0,0,0" Click="BtnSave_Click"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </StackPanel>
 </Window>

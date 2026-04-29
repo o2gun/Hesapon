@@ -17,6 +17,74 @@ namespace ConstruxERP.Services
         public List<Product> GetLowStockProducts()           => _repo.GetLowStock();
         public Product?      GetProduct(int id)              => _repo.GetById(id);
 
+
+        public void CreateProductWithInitialStock(Product product, Purchase initialPurchase)
+        {
+            using var conn = DatabaseContext.GetConnection();
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                // 1. Ürünü ekle ve yeni ID'yi al
+                using var cmdProd = conn.CreateCommand();
+                cmdProd.Transaction = tx;
+                cmdProd.CommandText = @"
+                    INSERT INTO products (name, category, unit, purchase_price, sale_price, stock_qty, min_stock, supplier_name, sku, notes, created_at)
+                    VALUES (@name, @cat, @unit, @pp, @sp, @stock, @min, @sname, @sku, @note, @date);
+                    SELECT last_insert_rowid();";
+
+                cmdProd.Parameters.AddWithValue("@name", product.Name);
+                cmdProd.Parameters.AddWithValue("@cat", product.Category);
+                cmdProd.Parameters.AddWithValue("@unit", product.Unit);
+                cmdProd.Parameters.AddWithValue("@pp", product.PurchasePrice);
+                cmdProd.Parameters.AddWithValue("@sp", product.SalePrice);
+                cmdProd.Parameters.AddWithValue("@stock", product.StockQty);
+                cmdProd.Parameters.AddWithValue("@min", product.MinStock);
+                cmdProd.Parameters.AddWithValue("@sname", product.SupplierName);
+                cmdProd.Parameters.AddWithValue("@sku", product.Sku);
+                cmdProd.Parameters.AddWithValue("@note", product.Notes);
+                cmdProd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                int newProductId = Convert.ToInt32(cmdProd.ExecuteScalar());
+
+                // 2. Alým (Purchase) kaydýný oluþtur
+                initialPurchase.ProductId = newProductId;
+                initialPurchase.TotalPrice = initialPurchase.Qty * initialPurchase.UnitPrice;
+                initialPurchase.RemainingDebt = initialPurchase.TotalPrice - initialPurchase.AmountPaid;
+
+                using var cmdPurch = conn.CreateCommand();
+                cmdPurch.Transaction = tx;
+                cmdPurch.CommandText = @"
+                    INSERT INTO purchases (supplier_id, product_id, qty, unit_price, total_price, amount_paid, remaining_debt, note, purchase_date)
+                    VALUES (@sid, @pid, @qty, @up, @tp, @ap, @rd, @pnote, @pdate)";
+
+                cmdPurch.Parameters.AddWithValue("@sid", initialPurchase.SupplierId);
+                cmdPurch.Parameters.AddWithValue("@pid", newProductId);
+                cmdPurch.Parameters.AddWithValue("@qty", initialPurchase.Qty);
+                cmdPurch.Parameters.AddWithValue("@up", initialPurchase.UnitPrice);
+                cmdPurch.Parameters.AddWithValue("@tp", initialPurchase.TotalPrice);
+                cmdPurch.Parameters.AddWithValue("@ap", initialPurchase.AmountPaid);
+                cmdPurch.Parameters.AddWithValue("@rd", initialPurchase.RemainingDebt);
+                cmdPurch.Parameters.AddWithValue("@pnote", initialPurchase.Note);
+                cmdPurch.Parameters.AddWithValue("@pdate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmdPurch.ExecuteNonQuery();
+
+                // 3. Tedarikçinin borcunu güncelle
+                using var cmdSupp = conn.CreateCommand();
+                cmdSupp.Transaction = tx;
+                cmdSupp.CommandText = "UPDATE suppliers SET total_debt = total_debt + @rd WHERE id = @sid";
+                cmdSupp.Parameters.AddWithValue("@rd", initialPurchase.RemainingDebt);
+                cmdSupp.Parameters.AddWithValue("@sid", initialPurchase.SupplierId);
+                cmdSupp.ExecuteNonQuery();
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
         public void AddProduct(Product p)
         {
             Validate(p);
@@ -71,13 +139,13 @@ namespace ConstruxERP.Services
         private static void Validate(Product p)
         {
             if (string.IsNullOrWhiteSpace(p.Name))
-                throw new ArgumentException("Product name is required.");
+                throw new ArgumentException("Ürün adý zorunludur.");
             if (string.IsNullOrWhiteSpace(p.Unit))
-                throw new ArgumentException("Unit is required.");
+                throw new ArgumentException("Birim zorunludur.");
             if (p.SalePrice < 0)
-                throw new ArgumentException("Sale price cannot be negative.");
+                throw new ArgumentException("Satýþ fiyatý negatif olamaz.");
             if (p.StockQty < 0)
-                throw new ArgumentException("Stock quantity cannot be negative.");
+                throw new ArgumentException("Stok miktarý negatif olamaz.");
         }
     }
 }

@@ -43,10 +43,6 @@ namespace ConstruxERP.Services
             var customer = _repo.GetById(customerId)
                 ?? throw new ArgumentException("Müþteri bulunamadý.");
 
-            if (amount > customer.TotalDebt)
-                throw new InvalidOperationException(
-                    $"Ödeme ({amount:C}) mevcut borcu ({customer.TotalDebt:C}) aþamaz.");
-
             using var conn = DatabaseContext.GetConnection();
             using var tx = conn.BeginTransaction();
             try
@@ -78,8 +74,7 @@ namespace ConstruxERP.Services
 
                 using var cmdCust = conn.CreateCommand();
                 cmdCust.Transaction = tx;
-                cmdCust.CommandText = @"
-                    UPDATE customers SET total_debt = MAX(0, total_debt - @amt) WHERE id = @cid";
+                cmdCust.CommandText = "UPDATE customers SET total_debt = total_debt - @amt WHERE id = @cid";
                 cmdCust.Parameters.AddWithValue("@amt", amount);
                 cmdCust.Parameters.AddWithValue("@cid", customerId);
                 cmdCust.ExecuteNonQuery();

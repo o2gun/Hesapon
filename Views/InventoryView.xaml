@@ -111,38 +111,51 @@
                         <StackPanel>
                             <Grid Margin="14,8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="95"/>
+                                    <ColumnDefinition Width="95"/>
+                                    <ColumnDefinition Width="95"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="80"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="TARİH" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
                                 <TextBlock Grid.Column="1" Text="TEDARİKÇİ" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
                                 <TextBlock Grid.Column="2" Text="MİKTAR" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
                                 <TextBlock Grid.Column="3" Text="BİRİM FİYAT" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
                                 <TextBlock Grid.Column="4" Text="TOPLAM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
-                                <TextBlock Grid.Column="5" Text="İŞLEM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="5" Text="ÖDENEN" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="6" Text="KALAN BORÇ" FontSize="10" FontWeight="SemiBold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="7" Text="İŞLEM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Right"/>
                             </Grid>
+
                             <ItemsControl x:Name="PurchaseList">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="14,8" MinHeight="30">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="95"/>
+                                                <ColumnDefinition Width="95"/>
+                                                <ColumnDefinition Width="95"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="80"/>
-                                                <ColumnDefinition Width="100"/>
-                                                <ColumnDefinition Width="100"/>
-                                                <ColumnDefinition Width="80"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding PurchaseDate}" FontSize="12" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="1" Text="{Binding SupplierName}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Qty}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding UnitPrice, StringFormat=C}" FontSize="12" Foreground="#2563EB" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="4" Text="{Binding TotalPrice, StringFormat=C}" FontSize="12" VerticalAlignment="Center"/>
-                                            <Button Grid.Column="5" Content="Düzenle" Style="{StaticResource SecondaryButton}" Tag="{Binding Id}" Click="BtnEditPurchase_Click" HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding UnitPrice, StringFormat={}{0:N2} ₺}" FontSize="12" Foreground="#2563EB" VerticalAlignment="Center"/>
+
+                                            <TextBlock Grid.Column="4" Text="{Binding TotalPrice, StringFormat={}{0:N2} ₺}" FontSize="12" VerticalAlignment="Center"/>
+
+                                            <TextBlock Grid.Column="5" Text="{Binding AmountPaid, StringFormat={}{0:N2} ₺}" FontSize="12" Foreground="#059669" FontWeight="Medium" VerticalAlignment="Center"/>
+
+                                            <TextBlock Grid.Column="6" Text="{Binding RemainingDebt, StringFormat={}{0:N2} ₺}" FontSize="12" Foreground="#DC2626" FontWeight="Bold" VerticalAlignment="Center"/>
+
+                                            <Button Grid.Column="7" Content="Düzenle" Style="{StaticResource SecondaryButton}" Tag="{Binding Id}" Click="BtnEditPurchase_Click" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

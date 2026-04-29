@@ -91,21 +91,31 @@ namespace ConstruxERP.Repositories
 
         // ─── Write ────────────────────────────────────────────────────────────
 
-        public int Insert(Sale sale)
+        public int Insert(Sale sale, SqliteTransaction? existingTx = null)
         {
-            using var conn = DatabaseContext.GetConnection();
-            using var tx = conn.BeginTransaction();
+            SqliteConnection? conn = existingTx != null ? existingTx.Connection : DatabaseContext.GetConnection();
+
+            SqliteTransaction? localTx = null;
+            if (existingTx == null)
+            {
+                if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+                localTx = conn.BeginTransaction();
+            }
+
+            var tx = existingTx ?? localTx;
+
             try
             {
                 using var cmd = conn.CreateCommand();
                 cmd.Transaction = tx;
                 cmd.CommandText = @"
-                    INSERT INTO sales
-                        (customer_id, product_id, qty, unit_price, total_price,
-                         amount_paid, remaining_debt, payment_type, note, sale_date)
-                    VALUES
-                        (@cid, @pid, @qty, @up, @tp, @ap, @rd, @pt, @note, @sdate);
-                    SELECT last_insert_rowid();";
+            INSERT INTO sales
+                (customer_id, product_id, qty, unit_price, total_price,
+                 amount_paid, remaining_debt, payment_type, note, sale_date)
+            VALUES
+                (@cid, @pid, @qty, @up, @tp, @ap, @rd, @pt, @note, @sdate);
+            SELECT last_insert_rowid();";
+
                 cmd.Parameters.AddWithValue("@cid", sale.CustomerId);
                 cmd.Parameters.AddWithValue("@pid", sale.ProductId);
                 cmd.Parameters.AddWithValue("@qty", sale.Qty);
@@ -115,42 +125,30 @@ namespace ConstruxERP.Repositories
                 cmd.Parameters.AddWithValue("@rd", sale.RemainingDebt);
                 cmd.Parameters.AddWithValue("@pt", sale.PaymentType);
                 cmd.Parameters.AddWithValue("@note", sale.Note ?? "");
+                cmd.Parameters.AddWithValue("@sdate", string.IsNullOrWhiteSpace(sale.SaleDate) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : sale.SaleDate);
 
-                string sDate = string.IsNullOrWhiteSpace(sale.SaleDate) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : sale.SaleDate;
-                cmd.Parameters.AddWithValue("@sdate", sDate);
                 int saleId = Convert.ToInt32(cmd.ExecuteScalar());
 
-                // Stok düş
                 using var cmdStock = conn.CreateCommand();
                 cmdStock.Transaction = tx;
-                cmdStock.CommandText = @"
-                    UPDATE products SET stock_qty = stock_qty - @qty,
-                                        updated_at = datetime('now','localtime')
-                    WHERE id = @pid";
+                cmdStock.CommandText = "UPDATE products SET stock_qty = stock_qty - @qty WHERE id = @pid";
                 cmdStock.Parameters.AddWithValue("@qty", sale.Qty);
                 cmdStock.Parameters.AddWithValue("@pid", sale.ProductId);
                 cmdStock.ExecuteNonQuery();
 
-                // Stok hareketi
                 using var cmdMov = conn.CreateCommand();
                 cmdMov.Transaction = tx;
-                cmdMov.CommandText = @"
-                    INSERT INTO stock_movements (product_id, qty_change, reason, reference)
-                    VALUES (@pid, @qty, 'sale', @ref)";
+                cmdMov.CommandText = "INSERT INTO stock_movements (product_id, qty_change, reason, reference) VALUES (@pid, @qty, 'sale', @ref)";
                 cmdMov.Parameters.AddWithValue("@pid", sale.ProductId);
                 cmdMov.Parameters.AddWithValue("@qty", -sale.Qty);
                 cmdMov.Parameters.AddWithValue("@ref", saleId);
                 cmdMov.ExecuteNonQuery();
 
-                // İlk satıştaki peşin ödemeyi debt_payments tablosuna kaydet
-                // (amount_paid > 0 ise — tamamen borçlu satışlarda kayıt oluşmaz)
                 if (sale.AmountPaid > 0)
                 {
                     using var cmdPay = conn.CreateCommand();
                     cmdPay.Transaction = tx;
-                    cmdPay.CommandText = @"
-                        INSERT INTO debt_payments (customer_id, sale_id, amount, notes)
-                        VALUES (@cid, @sid, @amt, @notes)";
+                    cmdPay.CommandText = "INSERT INTO debt_payments (customer_id, sale_id, amount, notes) VALUES (@cid, @sid, @amt, @notes)";
                     cmdPay.Parameters.AddWithValue("@cid", sale.CustomerId);
                     cmdPay.Parameters.AddWithValue("@sid", saleId);
                     cmdPay.Parameters.AddWithValue("@amt", sale.AmountPaid);
@@ -158,22 +156,28 @@ namespace ConstruxERP.Repositories
                     cmdPay.ExecuteNonQuery();
                 }
 
-                // Müşteri borcunu güncelle (kalan varsa)
-                if (sale.RemainingDebt > 0)
+                if (sale.RemainingDebt != 0)
                 {
                     using var cmdDebt = conn.CreateCommand();
                     cmdDebt.Transaction = tx;
-                    cmdDebt.CommandText = @"
-                        UPDATE customers SET total_debt = total_debt + @debt WHERE id = @cid";
+                    cmdDebt.CommandText = "UPDATE customers SET total_debt = total_debt + @debt WHERE id = @cid";
                     cmdDebt.Parameters.AddWithValue("@debt", sale.RemainingDebt);
                     cmdDebt.Parameters.AddWithValue("@cid", sale.CustomerId);
                     cmdDebt.ExecuteNonQuery();
                 }
 
-                tx.Commit();
+                localTx?.Commit();
                 return saleId;
             }
-            catch { tx.Rollback(); throw; }
+            catch
+            {
+                localTx?.Rollback();
+                throw;
+            }
+            finally
+            {
+                if (existingTx == null) conn.Close();
+            }
         }
 
         public void UpdatePayment(int saleId, decimal newAmountPaid, string paymentType)

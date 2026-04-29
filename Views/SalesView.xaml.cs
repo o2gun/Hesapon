@@ -39,8 +39,8 @@ namespace ConstruxERP.Views
             // Paging
             _totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
             _currentPage = Math.Min(_currentPage, _totalPages);
-            TxtPagingInfo.Text = $"Showing page {_currentPage} of {_totalPages}  ({total} records)";
-            TxtPageNum.Text = $"Page {_currentPage} / {_totalPages}";
+            TxtPagingInfo.Text = $"Sayfa  {_currentPage} / {_totalPages}  ({total} kayýt)";
+            TxtPageNum.Text = $"Sayfa {_currentPage} / {_totalPages}";
             BtnPrev.IsEnabled = _currentPage > 1;
             BtnNext.IsEnabled = _currentPage < _totalPages;
 
@@ -92,7 +92,7 @@ namespace ConstruxERP.Views
             var sale = _saleService.GetSaleById(saleId);
             if (sale == null)
             {
-                MessageBox.Show("Sale record not found.", "Error",
+                MessageBox.Show("Satýþ kaydý bulunamadý.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }

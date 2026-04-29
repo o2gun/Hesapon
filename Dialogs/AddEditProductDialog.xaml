@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="White"
-        FontFamily="{StaticResource AppFont}">
-
+        FontFamily="{StaticResource AppFont}"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <StackPanel>
         <Border Background="#0F172A" Padding="24,18">
             <TextBlock x:Name="TxtTitle" Text="Ürün Ekle"
@@ -16,7 +16,7 @@
 
         <StackPanel Margin="24,18,24,0">
 
-            <TextBlock Text="Ürünü İsmi *" FontSize="12" FontWeight="SemiBold"
+            <TextBlock Text="Ürün İsmi *" FontSize="12" FontWeight="SemiBold"
                        Foreground="#374151" Margin="0,0,0,5"/>
             <TextBox x:Name="TxtName" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>
 
@@ -59,12 +59,33 @@
                 <StackPanel>
                     <TextBlock Text="Satın alma fiyatı (₺)" FontSize="12" FontWeight="SemiBold"
                                Foreground="#374151" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtPurchasePrice" Style="{StaticResource FormTextBox}" Text="0"/>
+                    <TextBox x:Name="TxtPurchasePrice" Style="{StaticResource FormTextBox}" Text="0" 
+                             GotFocus="NumberTextBox_GotFocus" LostFocus="NumberTextBox_LostFocus" TextChanged="OnCalculationInputsChanged"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Satış fiyatı (₺) *" FontSize="12" FontWeight="SemiBold"
                                Foreground="#374151" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtSalePrice" Style="{StaticResource FormTextBox}" Text="0"/>
+                    <TextBox x:Name="TxtSalePrice" Style="{StaticResource FormTextBox}" Text="0"
+                             GotFocus="NumberTextBox_GotFocus" LostFocus="NumberTextBox_LostFocus"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Ödenen miktar" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtAmountPaid" Style="{StaticResource FormTextBox}" Text="0"
+                             GotFocus="NumberTextBox_GotFocus" LostFocus="NumberTextBox_LostFocus"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Toplam Ödenecek tutar*" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#374151" Margin="0,0,0,5"/>
+                    <TextBlock x:Name="lblTotalCalculation" Text="0.00 TL" FontSize="14" FontWeight="Bold" Padding="0,8,0,0" Margin="0,0,0,10"/>
                 </StackPanel>
             </Grid>
 
@@ -77,19 +98,20 @@
                 <StackPanel>
                     <TextBlock Text="Mevcut Stok" FontSize="12" FontWeight="SemiBold"
                                Foreground="#374151" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtStock" Style="{StaticResource FormTextBox}" Text="0"/>
+                    <TextBox x:Name="TxtStock" Style="{StaticResource FormTextBox}" Text="0"
+                             GotFocus="NumberTextBox_GotFocus" LostFocus="NumberTextBox_LostFocus" TextChanged="OnCalculationInputsChanged"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Minimum Stok" FontSize="12" FontWeight="SemiBold"
                                Foreground="#374151" Margin="0,0,0,5"/>
-                    <TextBox x:Name="TxtMinStock" Style="{StaticResource FormTextBox}" Text="0"/>
+                    <TextBox x:Name="TxtMinStock" Style="{StaticResource FormTextBox}" Text="0"
+                             GotFocus="NumberTextBox_GotFocus" LostFocus="NumberTextBox_LostFocus"/>
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="Aldığımız Şirket" FontSize="12" FontWeight="SemiBold"
+            <TextBlock Text="Aldığımız Şirket *" FontSize="12" FontWeight="SemiBold"
                        Foreground="#374151" Margin="0,0,0,5"/>
-            <!--<TextBox x:Name="TxtSupplier" Style="{StaticResource FormTextBox}" Margin="0,0,0,14"/>-->
-            <ComboBox x:Name="CmbSupplier" IsEditable="True" Margin="0,0,0,12" Height="34" Padding="6"/>
+            <ComboBox x:Name="CmbSupplier" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,12" Height="34" Padding="6"/>
 
             <TextBlock Text="SKU / Kodu" FontSize="12" FontWeight="SemiBold"
                        Foreground="#374151" Margin="0,0,0,5"/>
@@ -102,20 +124,6 @@
                      TextWrapping="Wrap" AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"
                      Margin="0,0,0,6">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TextBox">
-                                    <Border Background="White" BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                        <ScrollViewer x:Name="PART_ContentHost" Margin="10,8"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </TextBox.Style>
             </TextBox>
 
             <TextBlock x:Name="TxtError" Foreground="#DC2626" FontSize="12"

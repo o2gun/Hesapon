@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using ConstruxERP.Dialogs;
 
 namespace ConstruxERP.Views
 {
@@ -139,6 +140,7 @@ namespace ConstruxERP.Views
 
         private class LedgerItem
         {
+            public int Id { get; set; }
             public DateTime Date { get; set; }
             public bool IsSale { get; set; }
             public decimal Amount { get; set; }
@@ -231,6 +233,7 @@ namespace ConstruxERP.Views
 
             // UI Tablolarını Doldur
             DetailSalesList.ItemsSource = filteredSales.Select(t => new {
+                Id = t.RefSale.Id,
                 DateShort = t.Date.ToString("dd.MM.yyyy"),
                 t.RefSale.ProductName,
                 QtyDisplay = $"{t.RefSale.Qty} {t.RefSale.ProductUnit}",
@@ -264,6 +267,33 @@ namespace ConstruxERP.Views
         {
             var dlg = new Dialogs.AddEditCustomerDialog(_selectedCustomerObj) { Owner = Window.GetWindow(this) };
             if (dlg.ShowDialog() == true) LoadCustomerDetail();
+        }
+
+        private void BtnEditSale_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null)
+            {
+                if (int.TryParse(btn.Tag.ToString(), out int saleId))
+                {
+                    var saleService = new SaleService();
+                    var saleToEdit = saleService.GetSaleById(saleId);
+
+                    if (saleToEdit != null)
+                    {
+                        var dialog = new AddSaleDialog(saleToEdit);
+                        dialog.Owner = Window.GetWindow(this);
+
+                        if (dialog.ShowDialog() == true)
+                        {
+                            LoadCustomerDetail();
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Hata: Satış ID'si çözümlenemedi. Gelen değer: " + btn.Tag.ToString());
+                }
+            }
         }
 
         private void BtnExportExcel_Click(object sender, RoutedEventArgs e)

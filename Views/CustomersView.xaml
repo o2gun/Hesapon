@@ -233,15 +233,17 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="70"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="65"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="TARİH" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="ÜRÜN" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="2" Text="ADET" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="3" Text="B. FİYAT" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="4" Text="TOPLAM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="5" Text="İŞLEM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <ItemsControl x:Name="DetailSalesList">
                                     <ItemsControl.ItemTemplate>
@@ -251,15 +253,17 @@
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="70"/>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="60"/>
-                                                        <ColumnDefinition Width="80"/>
-                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="50"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="65"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding DateShort}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="1" Text="{Binding ProductName}" FontSize="12" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding QtyDisplay}" FontSize="12" Foreground="#374151" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="3" Text="{Binding UnitPriceDisplay}" FontSize="12" Foreground="#2563EB" FontWeight="Medium" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="4" Text="{Binding Total}" FontSize="12" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Content="Düzenle" Style="{StaticResource SecondaryButton}" Tag="{Binding Id}" Click="BtnEditSale_Click" HorizontalAlignment="Right" Padding="6,2" Height="24" FontSize="10"/>
                                                 </Grid>
                                                 <Rectangle Height="1" Fill="#F1F5F9" Margin="12,0"/>
                                             </StackPanel>
