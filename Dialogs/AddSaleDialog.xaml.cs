@@ -90,7 +90,6 @@ namespace ConstruxERP.Dialogs
         {
             TxtError.Visibility = Visibility.Collapsed;
 
-            // Validate
             if (CmbCustomer.SelectedItem is not Customer customer)
             { ShowError("Lütfen bir müşteri seçin."); return; }
 
@@ -106,6 +105,9 @@ namespace ConstruxERP.Dialogs
             decimal paid = decimal.TryParse(TxtPaid.Text, out var pd) ? pd : 0;
             DateTime selectedDate = DpSaleDate.SelectedDate ?? DateTime.Now;
 
+            decimal totalPrice = qty * unitPrice;
+            decimal remainingDebt = Math.Max(0, totalPrice - paid);
+
             try
             {
                 if (_editSale == null)
@@ -117,7 +119,9 @@ namespace ConstruxERP.Dialogs
                         ProductId = product.Id,
                         Qty = qty,
                         UnitPrice = unitPrice,
+                        TotalPrice = totalPrice,
                         AmountPaid = paid,
+                        RemainingDebt = remainingDebt,
                         SaleDate = selectedDate.ToString("yyyy-MM-dd HH:mm:ss")
                     };
 
@@ -126,15 +130,16 @@ namespace ConstruxERP.Dialogs
                 else
                 {
                     // --- DÜZENLEME MODU ---
-                    // Mevcut nesnenin değerlerini güncelle ve UpdateSale fonksiyonuna gönder
                     _editSale.CustomerId = customer.Id;
                     _editSale.ProductId = product.Id;
                     _editSale.Qty = qty;
                     _editSale.UnitPrice = unitPrice;
+                    _editSale.TotalPrice = totalPrice;
                     _editSale.AmountPaid = paid;
+                    _editSale.RemainingDebt = remainingDebt;
                     _editSale.SaleDate = selectedDate.ToString("yyyy-MM-dd HH:mm:ss");
 
-                    _saleService.UpdateSale(_editSale); // Bir önceki adımda yazdığımız Transaction'lı güvenli metod
+                    _saleService.UpdateSale(_editSale);
                 }
 
                 DialogResult = true;

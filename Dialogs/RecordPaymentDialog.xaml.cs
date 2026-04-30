@@ -1,3 +1,4 @@
+using ConstruxERP.Models;
 using ConstruxERP.Services;
 using System;
 using System.Windows;
@@ -6,52 +7,72 @@ namespace ConstruxERP.Dialogs
 {
     public partial class RecordPaymentDialog : Window
     {
-        private readonly CustomerService _service    = new();
-        private readonly int             _customerId;
+        private readonly CustomerService _service = new();
+        private readonly int _customerId;
+        private readonly int? _paymentId;
 
-        public RecordPaymentDialog(int customerId)
+        public RecordPaymentDialog(int customerId, int? paymentId = null)
         {
             InitializeComponent();
             _customerId = customerId;
+            _paymentId = paymentId;
 
-            var customer = _service.GetById(customerId);
-            if (customer != null)
+            if (_paymentId.HasValue)
             {
-                TxtCustomerName.Text = customer.Name;
-                TxtOutstanding.Text  = customer.TotalDebt.ToString("C", new System.Globalization.CultureInfo("tr-TR"));
-                // Pre-fill the full outstanding amount as a convenience
-                TxtAmount.Text = customer.TotalDebt.ToString("F2");
+                TxtTitle.Text = "Ödeme Düzenle";
+                BtnSave.Content = "Güncelle";
+                BtnSave.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#10B981"));
+                LoadPaymentData();
+            }
+            else
+            {
+                TxtTitle.Text = "Yeni Tahsilat";
+                BtnSave.Content = "Kaydet";
             }
         }
 
-        private void BtnRecord_Click(object sender, RoutedEventArgs e)
+        private void LoadPaymentData()
         {
-            TxtError.Visibility = Visibility.Collapsed;
+            var payment = _service.GetPaymentById(_paymentId.Value);
+            if (payment != null)
+            {
+                TxtAmount.Text = payment.Amount.ToString("N2", new System.Globalization.CultureInfo("tr-TR"));
+                TxtNotes.Text = payment.Notes;
+            }
+        }
 
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
+        {
             if (!decimal.TryParse(TxtAmount.Text, out decimal amount) || amount <= 0)
-            { ShowError("Lütfen sýfýrdan büyük geçerli bir ödeme tutarý girin."); return; }
+            {
+                MessageBox.Show("Lütfen geçerli bir tutar giriniz.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string notes = TxtNotes.Text.Trim();
 
             try
             {
-                _service.RecordPayment(_customerId, amount, notes: TxtNotes.Text.Trim());
+                if (_paymentId.HasValue)
+                {
+                    // DÜZENLEME MODU
+                    _service.EditPayment(_paymentId.Value, amount, notes);
+                }
+                else
+                {
+                    // YENÝ KAYIT MODU
+                    _service.RecordPayment(_customerId, amount, null, notes);
+                }
+
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                ShowError(ex.Message);
+                MessageBox.Show("Hata oluþtu: " + ex.Message, "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void ShowError(string msg)
-        {
-            TxtError.Text       = msg;
-            TxtError.Visibility = Visibility.Visible;
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
+        private void BtnCancel_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

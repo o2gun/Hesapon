@@ -23,7 +23,7 @@
                     <TextBlock Text="Arama paneli ve müşteri yönetimi" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
                 </StackPanel>
 
-                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                <!--<WrapPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBox x:Name="TxtSearch" Width="200" Margin="0,0,10,5" Style="{StaticResource SearchBox}" TextChanged="FilterChanged"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,15,5" VerticalAlignment="Center">
                         <CheckBox x:Name="ChkSearchName" Content="Ad" IsChecked="True" Margin="0,0,5,0" Click="FilterChanged"/>
@@ -33,6 +33,59 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,10,5" VerticalAlignment="Center">
                         <TextBlock Text="Min Borç:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#64748B" FontSize="12"/>
                         <TextBox x:Name="TxtMinDebt" Width="80" Text="0" Padding="4" TextChanged="FilterChanged"/>
+                    </StackPanel>
+                </WrapPanel>-->
+
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBox x:Name="TxtSearch" Width="200" Margin="0,0,10,5" Style="{StaticResource SearchBox}" TextChanged="FilterChanged"/>
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,15,5" VerticalAlignment="Center">
+                        <TextBlock Text="Gelişmiş Filtreler" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" HorizontalAlignment="Center"/>
+
+                        <ToggleButton x:Name="TglAdvancedFilters" IsChecked="False" Click="FilterChanged" HorizontalAlignment="Center">
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton">
+                                    <Setter Property="Background" Value="#CBD5E1"/>
+                                    <Setter Property="Width" Value="36"/>
+                                    <Setter Property="Height" Value="20"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border x:Name="SwitchBg" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                    <Ellipse x:Name="Knob" Fill="White" Width="16" Height="16" HorizontalAlignment="Left" Margin="2,0,2,0" VerticalAlignment="Center">
+                                                        <Ellipse.Effect>
+                                                            <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.2" Direction="270"/>
+                                                        </Ellipse.Effect>
+                                                    </Ellipse>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="SwitchBg" Property="Background" Value="#10B981"/>
+                                                        <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ToggleButton.Style>
+                        </ToggleButton>
+                    </StackPanel>
+
+                    <StackPanel x:Name="PnlAdvancedFilters" Orientation="Horizontal" VerticalAlignment="Center">
+                        <CheckBox x:Name="ChkSearchName" Content="İsim" IsChecked="True" Margin="0,0,5,5" 
+                  IsEnabled="{Binding IsChecked, ElementName=TglAdvancedFilters}" Click="FilterChanged" Height="14" Width="46"/>
+
+                        <CheckBox x:Name="ChkSearchPhone" Content="Telefon" IsChecked="True" Margin="0,0,5,5" 
+                  IsEnabled="{Binding IsChecked, ElementName=TglAdvancedFilters}" Click="FilterChanged" Height="14" Width="65"/>
+
+                        <CheckBox x:Name="ChkSearchAddress" Content="Adres" IsChecked="True" Margin="0,0,5,5" 
+                  IsEnabled="{Binding IsChecked, ElementName=TglAdvancedFilters}" Click="FilterChanged" Height="14" Width="57" />
+
+                        <TextBlock Text="Min Borç:" VerticalAlignment="Center" Margin="0,0,5,5" Foreground="#64748B" FontSize="12"/>
+                        <TextBox x:Name="TxtMinDebt" Width="80" Text="" Padding="4" Margin="0,0,0,5" Style="{StaticResource minDebt}"
+                 IsEnabled="{Binding IsChecked, ElementName=TglAdvancedFilters}" TextChanged="FilterChanged" Height="26"/>
                     </StackPanel>
                 </WrapPanel>
 
@@ -292,12 +345,15 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="50"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="TARİH" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="AÇIKLAMA" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="2" Text="TUTAR" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="3" Text="SONRAKİ BAKİYE" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="İŞLEM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                                 </Grid>
+
                                 <ItemsControl x:Name="DetailPaymentList">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -308,11 +364,18 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="80"/>
                                                         <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="50"/>
                                                     </Grid.ColumnDefinitions>
+
                                                     <TextBlock Grid.Column="0" Text="{Binding DateShort}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="1" Text="{Binding Notes}" FontSize="11" Foreground="#374151" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding AmountDisplay}" FontSize="12" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="3" Text="{Binding RemainingDebtDisplay}" FontSize="12" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+
+                                                    <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                        <Button Content="✎" ToolTip="Düzenle" Background="Transparent" BorderThickness="0" Foreground="#2563EB" Margin="0,0,5,0" Tag="{Binding PaymentId}" Click="BtnEditPayment_Click" Cursor="Hand"/>
+                                                        <Button Content="🗑" ToolTip="Sil" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Tag="{Binding PaymentId}" Click="BtnDeletePayment_Click" Cursor="Hand"/>
+                                                    </StackPanel>
                                                 </Grid>
                                                 <Rectangle Height="1" Fill="#F1F5F9" Margin="12,0"/>
                                             </StackPanel>

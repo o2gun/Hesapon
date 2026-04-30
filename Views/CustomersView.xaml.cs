@@ -48,14 +48,25 @@ namespace ConstruxERP.Views
             if (!IsLoaded || GridList.Visibility != Visibility.Visible) return;
 
             string search = TxtSearch?.Text?.Trim() ?? "";
-            bool searchName = ChkSearchName?.IsChecked == true;
-            bool searchPhone = ChkSearchPhone?.IsChecked == true;
-            bool searchAddress = ChkSearchAddress?.IsChecked == true;
 
-            if (!searchName && !searchPhone && !searchAddress) searchName = searchPhone = searchAddress = true;
+            bool isAdvanced = TglAdvancedFilters?.IsChecked == true;
 
-            decimal minDebt = 0;
-            if (decimal.TryParse(TxtMinDebt?.Text, out var parsedDebt)) minDebt = parsedDebt;
+            bool searchName = true;
+            bool searchPhone = false;
+            bool searchAddress = false;
+            decimal minDebt = decimal.MinValue;
+
+            if (isAdvanced)
+            {
+                searchName = ChkSearchName?.IsChecked == true;
+                searchPhone = ChkSearchPhone?.IsChecked == true;
+                searchAddress = ChkSearchAddress?.IsChecked == true;
+
+                if (!searchName && !searchPhone && !searchAddress) searchName = searchPhone = searchAddress = true;
+
+                if (decimal.TryParse(TxtMinDebt?.Text, out var parsedDebt))
+                    minDebt = parsedDebt;
+            }
 
             int totalRecords = _service.CountAll(search, searchName, searchPhone, searchAddress, minDebt);
             _totalPages = (int)Math.Ceiling(totalRecords / (double)_pageSize);
@@ -196,8 +207,7 @@ namespace ConstruxERP.Views
                 if (item.IsSale) currentDebt += item.Amount;
                 else currentDebt -= item.Amount;
 
-                // Virgül küsurat hatasını önlemek için
-                if (currentDebt < 0) currentDebt = 0;
+                currentDebt = Math.Round(currentDebt, 2);
                 item.RunningDebtAfter = currentDebt;
             }
 
@@ -237,16 +247,55 @@ namespace ConstruxERP.Views
                 DateShort = t.Date.ToString("dd.MM.yyyy"),
                 t.RefSale.ProductName,
                 QtyDisplay = $"{t.RefSale.Qty} {t.RefSale.ProductUnit}",
-                UnitPriceDisplay = t.RefSale.UnitPrice.ToString("C", _tr), // "Birim Fiyat" gösterimi kuralı
+                UnitPriceDisplay = t.RefSale.UnitPrice.ToString("C", _tr),
                 Total = t.RefSale.TotalPrice.ToString("C", _tr)
             });
 
             DetailPaymentList.ItemsSource = filteredPayments.Select(t => new {
+                PaymentId = t.RefPayment.Id,
                 DateShort = t.Date.ToString("dd.MM.yyyy"),
                 Notes = string.IsNullOrWhiteSpace(t.RefPayment.Notes) ? "Ödeme" : t.RefPayment.Notes,
                 AmountDisplay = t.Amount.ToString("C", _tr),
-                RemainingDebtDisplay = t.RunningDebtAfter.ToString("C", _tr) // Kural: Ödeme sonrası kalan borç
+                RemainingDebtDisplay = t.RunningDebtAfter.ToString("C", _tr)
             });
+        }
+
+        private void BtnDeletePayment_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is int paymentId)
+            {
+                if (MessageBox.Show("Bu ödemeyi silmek istediğinize emin misiniz? Müşterinin borcu bu tutar kadar geri artacaktır.", "Ödeme Sil", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        _service.DeletePayment(paymentId);
+
+                        LoadCustomerDetail();
+
+                        MessageBox.Show("Ödeme başarıyla silindi ve müşteri bakiyesi güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Silme işlemi sırasında bir hata oluştu:\n" + ex.Message, "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+
+        private void BtnEditPayment_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is int paymentId)
+            {
+                var dlg = new Dialogs.RecordPaymentDialog(_selectedDetailCustomerId, paymentId)
+                {
+                    Owner = Window.GetWindow(this)
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    LoadCustomerDetail();
+                }
+            }
         }
 
         // ─── DETAY ÜZERİNDEKİ İŞLEMLER (Satış, Tahsilat, Düzenle, Excel) ───

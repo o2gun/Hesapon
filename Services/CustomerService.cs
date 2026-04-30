@@ -37,8 +37,8 @@ namespace ConstruxERP.Services
 
         public void RecordPayment(int customerId, decimal amount, int? saleId = null, string notes = "")
         {
-            if (amount <= 0)
-                throw new ArgumentException("Ödeme tutarý sýfýrdan büyük olmalýdýr.");
+            if (amount == 0)
+                throw new ArgumentException("Tutar sýfýr olamaz. Ýade/Para çýkýþý iþlemleri için tutarýn baþýna eksi (-) koyarak girebilirsiniz.");
 
             var customer = _repo.GetById(customerId)
                 ?? throw new ArgumentException("Müþteri bulunamadý.");
@@ -82,6 +82,169 @@ namespace ConstruxERP.Services
                 tx.Commit();
             }
             catch { tx.Rollback(); throw; }
+        }
+
+        public void EditPayment(int paymentId, decimal newAmount, string newNotes)
+        {
+            if (newAmount == 0)
+                throw new ArgumentException("Tutar sýfýr olamaz. Ýade/Para çýkýþý iþlemleri için tutarýn baþýna eksi (-) koyarak girebilirsiniz.");
+
+            using var conn = DatabaseContext.GetConnection();
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                using var cmdGet = conn.CreateCommand();
+                cmdGet.Transaction = tx;
+                cmdGet.CommandText = "SELECT customer_id, sale_id, amount FROM debt_payments WHERE id = @id";
+                cmdGet.Parameters.AddWithValue("@id", paymentId);
+
+                int customerId = 0;
+                int? saleId = null;
+                decimal oldAmount = 0;
+
+                using (var reader = cmdGet.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        customerId = reader.GetInt32(0);
+                        saleId = reader.IsDBNull(1) ? null : reader.GetInt32(1);
+                        oldAmount = reader.GetDecimal(2);
+                    }
+                    else return;
+                }
+
+                decimal diff = newAmount - oldAmount;
+
+                using var cmdUpdatePay = conn.CreateCommand();
+                cmdUpdatePay.Transaction = tx;
+                cmdUpdatePay.CommandText = "UPDATE debt_payments SET amount = @amt, notes = @notes WHERE id = @id";
+                cmdUpdatePay.Parameters.AddWithValue("@amt", newAmount);
+                cmdUpdatePay.Parameters.AddWithValue("@notes", newNotes);
+                cmdUpdatePay.Parameters.AddWithValue("@id", paymentId);
+                cmdUpdatePay.ExecuteNonQuery();
+
+                using var cmdCust = conn.CreateCommand();
+                cmdCust.Transaction = tx;
+                cmdCust.CommandText = "UPDATE customers SET total_debt = total_debt - @diff WHERE id = @cid";
+                cmdCust.Parameters.AddWithValue("@diff", diff);
+                cmdCust.Parameters.AddWithValue("@cid", customerId);
+                cmdCust.ExecuteNonQuery();
+
+                if (saleId.HasValue)
+                {
+                    using var cmdSale = conn.CreateCommand();
+                    cmdSale.Transaction = tx;
+                    cmdSale.CommandText = @"
+                UPDATE sales SET
+                    remaining_debt = MAX(0, remaining_debt - @diff),
+                    amount_paid    = amount_paid + @diff
+                WHERE id = @sid";
+                    cmdSale.Parameters.AddWithValue("@diff", diff);
+                    cmdSale.Parameters.AddWithValue("@sid", saleId.Value);
+                    cmdSale.ExecuteNonQuery();
+                }
+
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public void DeletePayment(int paymentId)
+        {
+            using var conn = DatabaseContext.GetConnection();
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                // 1. Önce silinecek ödemenin bilgilerini (müþteri, tutar, baðlý olduðu satýþ) alalým
+                using var cmdGet = conn.CreateCommand();
+                cmdGet.Transaction = tx;
+                cmdGet.CommandText = "SELECT customer_id, sale_id, amount FROM debt_payments WHERE id = @id";
+                cmdGet.Parameters.AddWithValue("@id", paymentId);
+
+                int customerId = 0;
+                int? saleId = null;
+                decimal amount = 0;
+
+                using (var reader = cmdGet.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        customerId = reader.GetInt32(0);
+                        saleId = reader.IsDBNull(1) ? null : reader.GetInt32(1);
+                        amount = reader.GetDecimal(2);
+                    }
+                    else
+                    {
+                        // Eðer id bulunamazsa sessizce çýk veya hata fýrlat
+                        return;
+                    }
+                }
+
+                // 2. Müþterinin toplam borcunu, sildiðimiz ödeme tutarý kadar GERÝ ARTIRALIM
+                using var cmdCust = conn.CreateCommand();
+                cmdCust.Transaction = tx;
+                cmdCust.CommandText = "UPDATE customers SET total_debt = total_debt + @amt WHERE id = @cid";
+                cmdCust.Parameters.AddWithValue("@amt", amount);
+                cmdCust.Parameters.AddWithValue("@cid", customerId);
+                cmdCust.ExecuteNonQuery();
+
+                // 3. Eðer bu ödeme belirli bir iþleme/satýþa baðlý yapýldýysa, o satýþýn hesabýný da GERÝ ALALIM
+                if (saleId.HasValue)
+                {
+                    using var cmdSale = conn.CreateCommand();
+                    cmdSale.Transaction = tx;
+                    cmdSale.CommandText = @"
+                UPDATE sales 
+                SET amount_paid = amount_paid - @amt, 
+                    remaining_debt = remaining_debt + @amt 
+                WHERE id = @sid";
+                    cmdSale.Parameters.AddWithValue("@amt", amount);
+                    cmdSale.Parameters.AddWithValue("@sid", saleId.Value);
+                    cmdSale.ExecuteNonQuery();
+                }
+
+                // 4. Son olarak ödeme kaydýnýn kendisini silelim
+                using var cmdDel = conn.CreateCommand();
+                cmdDel.Transaction = tx;
+                cmdDel.CommandText = "DELETE FROM debt_payments WHERE id = @id";
+                cmdDel.Parameters.AddWithValue("@id", paymentId);
+                cmdDel.ExecuteNonQuery();
+
+                // Tüm adýmlar baþarýlýysa iþlemi onayla
+                tx.Commit();
+            }
+            catch
+            {
+                // Herhangi bir adýmda hata olursa tüm iþlemleri geri al (veritabaný tutarlýlýðý için)
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public DebtPayment GetPaymentById(int paymentId)
+        {
+            using var conn = DatabaseContext.GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT id, customer_id, amount, notes, paid_at FROM debt_payments WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", paymentId);
+
+            using var r = cmd.ExecuteReader();
+            if (r.Read())
+            {
+                return new DebtPayment
+                {
+                    Id = r.GetInt32(0),
+                    CustomerId = r.GetInt32(1),
+                    Amount = r.GetDecimal(2),
+                    Notes = r.GetString(3),
+                    PaidAt = r.GetString(4)
+                };
+            }
+            return null;
         }
 
         public decimal GetTotalOutstandingDebt()

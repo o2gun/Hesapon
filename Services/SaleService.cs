@@ -136,82 +136,118 @@ namespace ConstruxERP.Services
             }
         }
 
-        public void UpdateSale(Sale updatedSale)
+        public void UpdateSale(Sale sale)
         {
             using var conn = DatabaseContext.GetConnection();
             using var tx = conn.BeginTransaction();
             try
             {
-                // 1. Eski satýþ kaydýný getir
                 using var cmdGet = conn.CreateCommand();
                 cmdGet.Transaction = tx;
-                cmdGet.CommandText = "SELECT product_id, customer_id, qty, amount_paid, remaining_debt FROM sales WHERE id = @id";
-                cmdGet.Parameters.AddWithValue("@id", updatedSale.Id);
-                using var r = cmdGet.ExecuteReader();
-                if (!r.Read()) throw new Exception("Satýþ kaydý bulunamadý.");
+                cmdGet.CommandText = "SELECT customer_id, product_id, quantity, remaining_debt FROM sales WHERE id = @id";
+                cmdGet.Parameters.AddWithValue("@id", sale.Id);
 
-                int oldProductId = r.GetInt32(0);
-                int oldCustomerId = r.GetInt32(1);
-                decimal oldQty = r.GetDecimal(2);
-                decimal oldRemainingDebt = r.GetDecimal(4);
-                r.Close();
+                int oldCustomerId = 0, oldProductId = 0;
+                decimal oldQty = 0, oldRemainingDebt = 0;
 
-                // 2. Yeni deðerleri hesapla
-                updatedSale.TotalPrice = Math.Round(updatedSale.Qty * updatedSale.UnitPrice, 2);
-                updatedSale.AmountPaid = Math.Max(0, Math.Min(updatedSale.AmountPaid, updatedSale.TotalPrice));
-                updatedSale.RemainingDebt = Math.Round(updatedSale.TotalPrice - updatedSale.AmountPaid, 2);
+                using (var reader = cmdGet.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        oldCustomerId = reader.GetInt32(0);
+                        oldProductId = reader.GetInt32(1);
+                        oldQty = reader.GetDecimal(2);
+                        oldRemainingDebt = reader.GetDecimal(3);
+                    }
+                    else throw new Exception("Düzenlenmek istenen satýþ kaydý bulunamadý.");
+                }
 
-                // Aradaki farklarý (Deltalarý) bul
-                decimal qtyDelta = updatedSale.Qty - oldQty; // Artýysa stoktan daha fazla düþecek
-                decimal debtDelta = updatedSale.RemainingDebt - oldRemainingDebt; // Artýysa müþteri borcu artacak
+                if (oldCustomerId == sale.CustomerId)
+                {
+                    decimal debtDiff = sale.RemainingDebt - oldRemainingDebt;
+                    if (debtDiff != 0)
+                    {
+                        using var cmdCust = conn.CreateCommand();
+                        cmdCust.Transaction = tx;
+                        cmdCust.CommandText = "UPDATE customers SET total_debt = total_debt + @diff WHERE id = @cid";
+                        cmdCust.Parameters.AddWithValue("@diff", debtDiff);
+                        cmdCust.Parameters.AddWithValue("@cid", sale.CustomerId);
+                        cmdCust.ExecuteNonQuery();
+                    }
+                }
+                else
+                {
+                    using var cmdOldCust = conn.CreateCommand();
+                    cmdOldCust.Transaction = tx;
+                    cmdOldCust.CommandText = "UPDATE customers SET total_debt = total_debt - @oldDebt WHERE id = @cid";
+                    cmdOldCust.Parameters.AddWithValue("@oldDebt", oldRemainingDebt);
+                    cmdOldCust.Parameters.AddWithValue("@cid", oldCustomerId);
+                    cmdOldCust.ExecuteNonQuery();
 
-                // Ürün deðiþikliði olduysa engelle (Mantýk karmaþasýný önlemek için)
-                if (oldProductId != updatedSale.ProductId || oldCustomerId != updatedSale.CustomerId)
-                    throw new Exception("Düzenleme sýrasýnda Müþteri veya Ürün deðiþtirilemez. Lütfen satýþý silip yeniden ekleyin.");
+                    using var cmdNewCust = conn.CreateCommand();
+                    cmdNewCust.Transaction = tx;
+                    cmdNewCust.CommandText = "UPDATE customers SET total_debt = total_debt + @newDebt WHERE id = @cid";
+                    cmdNewCust.Parameters.AddWithValue("@newDebt", sale.RemainingDebt);
+                    cmdNewCust.Parameters.AddWithValue("@cid", sale.CustomerId);
+                    cmdNewCust.ExecuteNonQuery();
+                }
 
-                // 3. Stok Miktarýný Güncelle (Satýþ arttýysa stok azalýr)
-                using var cmdStock = conn.CreateCommand();
-                cmdStock.Transaction = tx;
-                cmdStock.CommandText = "UPDATE products SET stock_qty = stock_qty - @delta WHERE id = @pid";
-                cmdStock.Parameters.AddWithValue("@delta", qtyDelta);
-                cmdStock.Parameters.AddWithValue("@pid", updatedSale.ProductId);
-                cmdStock.ExecuteNonQuery();
+                if (oldProductId == sale.ProductId)
+                {
+                    decimal qtyDiff = sale.Qty - oldQty;
+                    if (qtyDiff != 0)
+                    {
+                        using var cmdProd = conn.CreateCommand();
+                        cmdProd.Transaction = tx;
+                        cmdProd.CommandText = "UPDATE products SET stock_quantity = stock_quantity - @diff WHERE id = @pid";
+                        cmdProd.Parameters.AddWithValue("@diff", qtyDiff);
+                        cmdProd.Parameters.AddWithValue("@pid", sale.ProductId);
+                        cmdProd.ExecuteNonQuery();
+                    }
+                }
+                else
+                {
+                    using var cmdOldProd = conn.CreateCommand();
+                    cmdOldProd.Transaction = tx;
+                    cmdOldProd.CommandText = "UPDATE products SET stock_quantity = stock_quantity + @oldQty WHERE id = @pid";
+                    cmdOldProd.Parameters.AddWithValue("@oldQty", oldQty);
+                    cmdOldProd.Parameters.AddWithValue("@pid", oldProductId);
+                    cmdOldProd.ExecuteNonQuery();
 
-                // 4. Müþteri Borcunu Güncelle
-                using var cmdDebt = conn.CreateCommand();
-                cmdDebt.Transaction = tx;
-                cmdDebt.CommandText = "UPDATE customers SET total_debt = total_debt + @delta WHERE id = @cid";
-                cmdDebt.Parameters.AddWithValue("@delta", debtDelta);
-                cmdDebt.Parameters.AddWithValue("@cid", updatedSale.CustomerId);
-                cmdDebt.ExecuteNonQuery();
+                    using var cmdNewProd = conn.CreateCommand();
+                    cmdNewProd.Transaction = tx;
+                    cmdNewProd.CommandText = "UPDATE products SET stock_quantity = stock_quantity - @newQty WHERE id = @pid";
+                    cmdNewProd.Parameters.AddWithValue("@newQty", sale.Qty);
+                    cmdNewProd.Parameters.AddWithValue("@pid", sale.ProductId);
+                    cmdNewProd.ExecuteNonQuery();
+                }
 
-                // 5. Satýþ Kaydýný Güncelle
-                using var cmdUpd = conn.CreateCommand();
-                cmdUpd.Transaction = tx;
-                cmdUpd.CommandText = @"UPDATE sales SET 
-                                qty=@qty, 
-                                unit_price=@up, 
-                                total_price=@tp, 
-                                amount_paid=@ap, 
-                                remaining_debt=@rd, 
-                                note=@note,
-                                sale_date=@date 
-                              WHERE id=@id";
-                cmdUpd.Parameters.AddWithValue("@qty", updatedSale.Qty);
-                cmdUpd.Parameters.AddWithValue("@up", updatedSale.UnitPrice);
-                cmdUpd.Parameters.AddWithValue("@tp", updatedSale.TotalPrice);
-                cmdUpd.Parameters.AddWithValue("@ap", updatedSale.AmountPaid);
-                cmdUpd.Parameters.AddWithValue("@rd", updatedSale.RemainingDebt);
-                cmdUpd.Parameters.AddWithValue("@note", updatedSale.Note ?? "");
-                cmdUpd.Parameters.AddWithValue("@date", updatedSale.SaleDate);
-                cmdUpd.Parameters.AddWithValue("@id", updatedSale.Id);
-                
-                int rowsAffected = cmdUpd.ExecuteNonQuery();
-                if (rowsAffected == 0) throw new Exception("Güncelleme yapýlamadý, ID hatalý olabilir.");
+                using var cmdUpdate = conn.CreateCommand();
+                cmdUpdate.Transaction = tx;
+                cmdUpdate.CommandText = @"
+            UPDATE sales 
+            SET customer_id = @cid, product_id = @pid, quantity = @qty, 
+                unit_price = @up, total_price = @tp, amount_paid = @ap, 
+                remaining_debt = @rd, sale_date = @sd 
+            WHERE id = @id";
+                cmdUpdate.Parameters.AddWithValue("@cid", sale.CustomerId);
+                cmdUpdate.Parameters.AddWithValue("@pid", sale.ProductId);
+                cmdUpdate.Parameters.AddWithValue("@qty", sale.Qty);
+                cmdUpdate.Parameters.AddWithValue("@up", sale.UnitPrice);
+                cmdUpdate.Parameters.AddWithValue("@tp", sale.TotalPrice);
+                cmdUpdate.Parameters.AddWithValue("@ap", sale.AmountPaid);
+                cmdUpdate.Parameters.AddWithValue("@rd", sale.RemainingDebt);
+                cmdUpdate.Parameters.AddWithValue("@sd", sale.SaleDate);
+                cmdUpdate.Parameters.AddWithValue("@id", sale.Id);
+                cmdUpdate.ExecuteNonQuery();
 
                 tx.Commit();
             }
-            catch { tx.Rollback(); throw; }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
 
         public int CountSales(string search = "")

@@ -35,8 +35,8 @@ namespace ConstruxERP.Repositories
                 SELECT c.id, c.name, c.phone, c.email,
                        c.address, c.billing_address,
                        c.total_debt, c.created_at,
-                       COALESCE(SUM(s.total_price), 0) AS total_purchases,
-                       COALESCE(SUM(s.amount_paid),  0) AS total_paid
+                       (SELECT COALESCE(SUM(total_price), 0) FROM sales WHERE customer_id = c.id) AS total_purchases,
+                       (SELECT COALESCE(SUM(amount), 0) FROM debt_payments WHERE customer_id = c.id) AS total_paid
                 FROM customers c
                 LEFT JOIN sales s ON s.customer_id = c.id
                 WHERE c.total_debt >= @minDebt {searchCondition}
@@ -92,8 +92,8 @@ namespace ConstruxERP.Repositories
                 SELECT c.id, c.name, c.phone, c.email,
                        c.address, c.billing_address,
                        c.total_debt, c.created_at,
-                       COALESCE(SUM(s.total_price), 0) AS total_purchases,
-                       COALESCE(SUM(s.amount_paid),  0) AS total_paid
+                       (SELECT COALESCE(SUM(total_price), 0) FROM sales WHERE customer_id = c.id) AS total_purchases,
+                       (SELECT COALESCE(SUM(amount), 0) FROM debt_payments WHERE customer_id = c.id) AS total_paid
                 FROM customers c
                 LEFT JOIN sales s ON s.customer_id = c.id
                 WHERE c.total_debt > 0
@@ -242,10 +242,37 @@ namespace ConstruxERP.Repositories
         public void Delete(int id)
         {
             using var conn = DatabaseContext.GetConnection();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM customers WHERE id = @id";
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.ExecuteNonQuery();
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                // 1. Önce bu müşteriye ait tüm ödeme geçmişini sil
+                using var cmdPay = conn.CreateCommand();
+                cmdPay.Transaction = tx;
+                cmdPay.CommandText = "DELETE FROM debt_payments WHERE customer_id = @id";
+                cmdPay.Parameters.AddWithValue("@id", id);
+                cmdPay.ExecuteNonQuery();
+
+                // 2. Sonra bu müşteriye ait tüm satış geçmişini sil
+                using var cmdSale = conn.CreateCommand();
+                cmdSale.Transaction = tx;
+                cmdSale.CommandText = "DELETE FROM sales WHERE customer_id = @id";
+                cmdSale.Parameters.AddWithValue("@id", id);
+                cmdSale.ExecuteNonQuery();
+
+                // 3. En son müşterinin kendisini sil
+                using var cmdCust = conn.CreateCommand();
+                cmdCust.Transaction = tx;
+                cmdCust.CommandText = "DELETE FROM customers WHERE id = @id";
+                cmdCust.Parameters.AddWithValue("@id", id);
+                cmdCust.ExecuteNonQuery();
+
+                tx.Commit(); // Her şey başarılıysa onayla
+            }
+            catch
+            {
+                tx.Rollback(); // Hata çıkarsa işlemi geri al
+                throw;
+            }
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────────
