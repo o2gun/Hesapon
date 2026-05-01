@@ -139,6 +139,7 @@ namespace ConstruxERP.Repositories
             AddColumnIfMissing(conn, "customers", "billing_address", "TEXT NOT NULL DEFAULT ''");
             AddColumnIfMissing(conn, "sales", "note", "TEXT NOT NULL DEFAULT ''");
             AddColumnIfMissing(conn, "suppliers", "billing_address", "TEXT NOT NULL DEFAULT ''");
+            AddColumnIfMissing(conn, "suppliers", "contact_name", "TEXT NOT NULL DEFAULT ''");
         }
 
         /// <summary>

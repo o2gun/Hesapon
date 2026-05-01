@@ -9,6 +9,14 @@ namespace ConstruxERP.Dialogs
         private readonly SupplierService _service = new();
         public AddEditSupplierDialog() { InitializeComponent(); }
 
+        private readonly int? _supplierId;
+
+        public AddEditSupplierDialog(int supplierId) : this()
+        {
+            _supplierId = supplierId;
+            Title = "Tedarikçi Düzenle";
+        }
+
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(TxtName.Text))

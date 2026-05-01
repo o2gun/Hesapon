@@ -10,11 +10,14 @@ namespace ConstruxERP.Models
     {
         public int Id { get; set; }
         public string Name { get; set; } = "";
+        public string ContactName { get; set; }
         public string Phone { get; set; } = "";
         public string Email { get; set; } = "";
         public string Address { get; set; } = "";
         public string BillingAddress { get; set; } = "";
         public decimal TotalDebt { get; set; }
         public string CreatedAt { get; set; } = "";
+        public decimal TotalPurchased { get; set; }
+        public decimal TotalPaid { get; set; }
     }
 }

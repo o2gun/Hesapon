@@ -36,7 +36,7 @@ namespace ConstruxERP.Dialogs
             var payment = _service.GetPaymentById(_paymentId.Value);
             if (payment != null)
             {
-                TxtAmount.Text = payment.Amount.ToString("N2", new System.Globalization.CultureInfo("tr-TR"));
+                TxtAmount.Text = payment.Amount.ToString();
                 TxtNotes.Text = payment.Notes;
             }
         }
